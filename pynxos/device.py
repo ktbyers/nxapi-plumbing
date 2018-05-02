@@ -16,12 +16,13 @@ class RebootSignal(NXOSError):
 
 
 class Device(object):
-    def __init__(self, host, username, password, transport=u'http', port=None, timeout=30,
-                 verify=True):
+    def __init__(self, host, username, password, transport=u'http', encoding=u'xml',
+                 port=None, timeout=30, verify=True):
         self.host = host
         self.username = username
         self.password = password
         self.transport = transport
+        self.encoding = encoding
         self.timeout = timeout
         self.verify = verify
 
@@ -39,10 +40,20 @@ class Device(object):
             else:
                 raise CLIError(command, 'Invalid command.')
 
+    def _cli_error_check_xml(self, command_response):
+        pass
+        # Need to figure out error checking
+
     def _cli_command_xml(self, commands, method=u'cli_show'):
         if not isinstance(commands, list):
             commands = [commands]
-        self.xml.send_request(commands, method=method, timeout=self.timeout)
+
+        xml_response =self.xml.send_request(commands, method=method, timeout=self.timeout)
+        text_response_list = []
+        self._cli_error_check_xml(xml_response)
+        text_response_list.append(xml_response)
+
+        return strip_unicode(text_response_list)
 
     def _cli_command(self, commands, method=u'cli'):
         if not isinstance(commands, list):
@@ -89,19 +100,26 @@ class Device(object):
             A list of outputs for each show command
         """
         return_list = []
-        if raw_text:
-            response_list = self._cli_command(commands, method=u'cli_ascii')
+        if self.encoding == 'rpc':
+            if raw_text:
+                response_list = self._cli_command(commands, method=u'cli_ascii')
+                for response in response_list:
+                    if response:
+                        return_list.append(response[u'msg'])
+            else:
+                response_list = self._cli_command(commands)
+                for response in response_list:
+                    if response:
+                        return_list.append(response[u'body'])
+
+            return return_list
+        elif self.encoding == 'xml':
+            response_list = self._cli_command_xml(commands)
             for response in response_list:
                 if response:
-                    return_list.append(response[u'msg'])
-        else:
-            response_list = self._cli_command(commands)
-            for response in response_list:
-                if response:
-                    return_list.append(response[u'body'])
+                    return_list.append(response)
 
-        return return_list
-
+            return return_list
     def config(self, command):
         """Send a configuration command.
 

@@ -6,7 +6,7 @@ from pynxos.errors import NXOSError
 
 
 class XMLClient(object):
-    def __init__(self, host, username, password, transport='http', port=None):
+    def __init__(self, host, username, password, transport='http', port=None, verify=True):
         if transport not in ['http', 'https']:
             raise NXOSError("'%s' is an invalid transport." % transport)
 
@@ -20,8 +20,9 @@ class XMLClient(object):
         self.headers = {'content-type': u'application/xml'}
         self.username = username
         self.password = password
+        self.verify = verify
 
-    def _build_payload(self, commands, method, xml_version='1.0', version=1):
+    def _build_payload(self, commands, method, xml_version='1.0', version='1.0'):
 
         if len(commands) > 1:
             command = 0
@@ -54,5 +55,4 @@ class XMLClient(object):
                                  headers=self.headers,
                                  auth=HTTPBasicAuth(self.username, self.password),
                                  verify=False)
-        response = response.text
-        return response
+        return response.text
