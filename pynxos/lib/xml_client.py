@@ -1,4 +1,5 @@
 from __future__ import print_function, unicode_literals
+
 import requests
 from requests.auth import HTTPBasicAuth
 
@@ -6,7 +7,9 @@ from pynxos.errors import NXOSError
 
 
 class XMLClient(object):
+
     def __init__(self, host, username, password, transport='http', port=None, verify=True):
+
         if transport not in ['http', 'https']:
             raise NXOSError("'%s' is an invalid transport." % transport)
 
@@ -23,7 +26,7 @@ class XMLClient(object):
         self.verify = verify
 
     def _build_payload(self, commands, method, xml_version='1.0', version='1.0'):
-
+        """ """
         if len(commands) > 1:
             command = 0
             for item in commands:
@@ -47,12 +50,24 @@ class XMLClient(object):
         return payload
 
     def send_request(self, commands, method='cli_show', timeout=30):
+        """ """
         timeout = int(timeout)
         payload = self._build_payload(commands, method)
-        response = requests.post(self.url,
-                                 timeout=timeout,
-                                 data=payload,
-                                 headers=self.headers,
-                                 auth=HTTPBasicAuth(self.username, self.password),
-                                 verify=False)
-        return response.text
+
+        try:
+            response = requests.post(self.url,
+                                     timeout=timeout,
+                                     data=payload,
+                                     headers=self.headers,
+                                     auth=HTTPBasicAuth(
+                                         self.username, self.password),
+                                     verify=False)
+        except requests.exceptions.ConnectionError as e:
+            raise requests.exceptions.ConnectionError(e)
+        else:
+            response_list = [{'response': response.text}]
+
+            # Add the 'command' that was executed to the response dictionary
+            for i, response_dict in enumerate(response_list):
+                response_dict['command'] = commands[i]
+            return response_list

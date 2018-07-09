@@ -1,14 +1,17 @@
 from __future__ import print_function, unicode_literals
 
-import signal
 import re
-from .lib.rpc_client import RPCClient
-from .lib.xml_client import XMLClient
-from .lib import convert_dict_by_key, converted_list_from_table, strip_unicode
-from .lib.data_model import key_maps
+import signal
+from xml.dom import minidom
+
+from pynxos.errors import CLIError, NXOSError
 from pynxos.features.file_copy import FileCopy
 from pynxos.features.vlans import Vlans
-from pynxos.errors import CLIError, NXOSError
+
+from .lib import convert_dict_by_key, converted_list_from_table, strip_unicode
+from .lib.data_model import key_maps
+from .lib.rpc_client import RPCClient
+from .lib.xml_client import XMLClient
 
 
 class RebootSignal(NXOSError):
@@ -16,7 +19,7 @@ class RebootSignal(NXOSError):
 
 
 class Device(object):
-    def __init__(self, host, username, password, transport=u'http', encoding=u'xml',
+    def __init__(self, host, username, password, transport=u'http', encoding=u'rpc',
                  port=None, timeout=30, verify=True):
         self.host = host
         self.username = username
@@ -26,10 +29,12 @@ class Device(object):
         self.timeout = timeout
         self.verify = verify
 
-        self.rpc = RPCClient(host, username, password, transport=transport, port=port,
-                             verify=self.verify)
-        self.xml = XMLClient(host, username, password, transport=transport, port=port,
-                             verify=self.verify)
+        if encoding == 'xml':
+            self.xml = XMLClient(host, username, password, transport=transport,
+                port=port, verify=self.verify)
+        elif encoding == 'rpc':
+            self.rpc = RPCClient(host, username, password, transport=transport,
+                port=port, verify=self.verify)  
 
     def _cli_error_check(self, command_response):
         error = command_response.get(u'error')
@@ -41,19 +46,21 @@ class Device(object):
                 raise CLIError(command, 'Invalid command.')
 
     def _cli_error_check_xml(self, command_response):
-        pass
-        # Need to figure out error checking
+        
+        def NodeAsText(node):
+            # convert a XML element to a string
+            try:
+                nodetext=node[0].firstChild.data.strip()
+                return nodetext
+            except IndexError:
+                return '__na__'
 
-    def _cli_command_xml(self, commands, method=u'cli_show'):
-        if not isinstance(commands, list):
-            commands = [commands]
+        # creates an xml object and identifies the clierror element
+        dom = minidom.parseString(command_response['response'])
+        node = dom.getElementsByTagName('clierror')
 
-        xml_response =self.xml.send_request(commands, method=method, timeout=self.timeout)
-        text_response_list = []
-        self._cli_error_check_xml(xml_response)
-        text_response_list.append(xml_response)
-
-        return strip_unicode(text_response_list)
+        if '__na__' != NodeAsText(node):
+            raise CLIError(command_response['command'], NodeAsText(node))
 
     def _cli_command(self, commands, method=u'cli'):
         if not isinstance(commands, list):
@@ -65,6 +72,18 @@ class Device(object):
         for command_response in rpc_response:
             self._cli_error_check(command_response)
             text_response_list.append(command_response[u'result'])
+
+        return strip_unicode(text_response_list)
+    
+    def _cli_command_xml(self, commands, method=u'cli_show'):
+        if not isinstance(commands, list):
+            commands = [commands]
+
+        xml_response =self.xml.send_request(commands, method=method, timeout=self.timeout)
+        text_response_list = []
+        for command_response in xml_response: 
+            self._cli_error_check_xml(command_response)
+            text_response_list.append(xml_response)
 
         return strip_unicode(text_response_list)
 
@@ -82,6 +101,7 @@ class Device(object):
         """
         commands = [command]
         list_result = self.show_list(commands, raw_text)
+
         if list_result:
             return list_result[0]
         else:
@@ -113,13 +133,21 @@ class Device(object):
                         return_list.append(response[u'body'])
 
             return return_list
+
         elif self.encoding == 'xml':
-            response_list = self._cli_command_xml(commands)
-            for response in response_list:
-                if response:
-                    return_list.append(response)
+            if raw_text:
+                response_list = self._cli_command_xml(commands, method=u'cli_show_ascii')
+                for response in response_list:
+                    if response:
+                        return_list.append(response)
+            else:
+                response_list = self._cli_command_xml(commands)
+                for response in response_list:
+                    if response:
+                        return_list.append(response)
 
             return return_list
+
     def config(self, command):
         """Send a configuration command.
 
