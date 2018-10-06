@@ -1,18 +1,20 @@
 from scp import SCPClient
-from pynxos.errors import CLIError, NXOSError
+from pynxos.errors import NXOSError
 
 import paramiko
 import hashlib
 import os
 import re
 
+
 class FileTransferError(NXOSError):
     pass
 
+
 class FileCopy(object):
-    """This class is used to copy local files to a NXOS device.
-    """
-    def __init__(self, device, src, dst=None, port=22, file_system='bootflash:'):
+    """This class is used to copy local files to a NXOS device."""
+
+    def __init__(self, device, src, dst=None, port=22, file_system="bootflash:"):
         self.device = device
         self.src = src
         self.dst = dst or os.path.basename(src)
@@ -20,11 +22,10 @@ class FileCopy(object):
         self.file_system = file_system
 
     def get_flash_size(self):
-        """Return the available space in the remote directory.
-        """
-        dir_out = self.device.show('dir {}'.format(self.file_system), raw_text=True)
+        """Return the available space in the remote directory."""
+        dir_out = self.device.show("dir {}".format(self.file_system), raw_text=True)
 
-        match = re.search(r'(\d+) bytes free', dir_out)
+        match = re.search(r"(\d+) bytes free", dir_out)
         bytes_free = match.group(1)
 
         return int(bytes_free)
@@ -67,8 +68,9 @@ class FileCopy(object):
 
     def remote_file_exists(self):
         dir_body = self.device.show(
-            'dir {0}/{1}'.format(self.file_system, self.dst), raw_text=True)
-        if 'No such file' in dir_body:
+            "dir {0}/{1}".format(self.file_system, self.dst), raw_text=True
+        )
+        if "No such file" in dir_body:
             return False
 
         return True
@@ -78,10 +80,11 @@ class FileCopy(object):
         if it exists.
         """
         md5_body = self.device.show(
-            'show file {0}{1} md5sum'.format(self.file_system, self.dst), raw_text=True)
+            "show file {0}{1} md5sum".format(self.file_system, self.dst), raw_text=True
+        )
         return md5_body.strip()
 
-    def get_local_md5(self, blocksize=2**20):
+    def get_local_md5(self, blocksize=2 ** 20):
         """Get the md5 sum of the local file,
         if it exists.
         """
@@ -118,11 +121,13 @@ class FileCopy(object):
         if pull is False:
             if not self.local_file_exists():
                 raise FileTransferError(
-                    'Could not transfer file. Local file doesn\'t exist.')
+                    "Could not transfer file. Local file doesn't exist."
+                )
 
             if not self.enough_space():
                 raise FileTransferError(
-                    'Could not transfer file. Not enough space on device.')
+                    "Could not transfer file. Not enough space on device."
+                )
 
         hostname = hostname or self.device.host
         username = username or self.device.username
@@ -136,18 +141,20 @@ class FileCopy(object):
             password=password,
             port=self.port,
             allow_agent=False,
-            look_for_keys=False)
+            look_for_keys=False,
+        )
 
-        full_remote_path = '{}{}'.format(self.file_system, self.dst)
+        full_remote_path = "{}{}".format(self.file_system, self.dst)
         scp = SCPClient(ssh.get_transport())
         try:
             if pull:
                 scp.get(full_remote_path, self.src)
             else:
                 scp.put(self.src, full_remote_path)
-        except:
+        except Exception:
             raise FileTransferError(
-                'Could not transfer file. There was an error during transfer. Please make sure remote permissions are set.')
+                "There was an error during file transfer. Make sure remote permissions are set."
+            )
         finally:
             scp.close()
 
