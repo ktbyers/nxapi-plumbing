@@ -40,10 +40,20 @@ def pytest_addoption(parser):
 
 
 @pytest.fixture(scope="module")
-def pynxos_device(request):
-    """Create the pynxos test device."""
+def mock_pynxos_device(request):
+    """Create a mock pynxos test device."""
     device_under_test = request.config.getoption("test_device")
     test_devices = parse_yaml(PWD + "/etc/test_devices.yml")
     device = test_devices[device_under_test]
     conn = MockDevice(**device)
+    return conn
+
+
+@pytest.fixture(scope="module")
+def pynxos_device(request):
+    """Create a real pynxos test device."""
+    device_under_test = request.config.getoption("test_device")
+    test_devices = parse_yaml(PWD + "/etc/test_devices.yml")
+    device = test_devices[device_under_test]
+    conn = Device(**device)
     return conn
