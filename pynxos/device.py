@@ -37,24 +37,15 @@ class Device(object):
         self.encoding = encoding
         self.timeout = timeout
         self.verify = verify
+        self.port = port
 
         if encoding == "xml":
             self.xml = XMLClient(
-                host,
-                username,
-                password,
-                transport=transport,
-                port=port,
-                verify=self.verify,
+                host, username, password, transport=transport, port=port, verify=verify
             )
         elif encoding == "rpc":
             self.rpc = RPCClient(
-                host,
-                username,
-                password,
-                transport=transport,
-                port=port,
-                verify=self.verify,
+                host, username, password, transport=transport, port=port, verify=verify
             )
 
     def _cli_error_check(self, command_response):
