@@ -2,4 +2,5 @@ pylama
 tox
 mock
 pytest
+pyyaml
 -r requirements.txt

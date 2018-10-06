@@ -9,7 +9,7 @@ from pynxos.errors import NXOSError
 
 class RPCClient(object):
     def __init__(
-        self, host, username, password, transport="http", port=None, verify=True
+        self, host, username, password, transport="https", port=None, verify=True
     ):
         if transport not in ["http", "https"]:
             raise NXOSError("'%s' is an invalid transport." % transport)
