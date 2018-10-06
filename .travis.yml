@@ -7,8 +7,6 @@ python:
 matrix:
   include:
   - python: 3.6
-    env: TOXENV=sphinx
-  - python: 3.6
     env: TOXENV=black
   - python: 3.6
     env: TOXENV=pylama
