@@ -2,5 +2,4 @@ pylama
 tox
 mock
 pytest
-black
 -r requirements.txt
