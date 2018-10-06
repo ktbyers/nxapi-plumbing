@@ -3,9 +3,10 @@ class NXOSError(Exception):
         self.message = message
 
     def __repr__(self):
-        return '%s: %s' % (self.__class__.__name__, self.message)
+        return "%s: %s" % (self.__class__.__name__, self.message)
 
     __str__ = __repr__
+
 
 class CLIError(NXOSError):
     def __init__(self, command, message):
