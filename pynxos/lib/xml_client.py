@@ -12,7 +12,7 @@ class XMLClient(object):
     ):
 
         if transport not in ["http", "https"]:
-            raise NXOSError("'%s' is an invalid transport." % transport)
+            raise NXOSError("'{}' is an invalid transport.".format(transport))
 
         if port is None:
             if transport == "http":
@@ -20,7 +20,7 @@ class XMLClient(object):
             elif transport == "https":
                 port = 443
 
-        self.url = "%s://%s:%s/ins" % (transport, host, port)
+        self.url = "{}://{}:{}/ins".format(transport, host, port)
         self.headers = {"content-type": "application/xml"}
         self.username = username
         self.password = password
@@ -53,7 +53,6 @@ class XMLClient(object):
         return payload
 
     def send_request(self, commands, method="cli_show", timeout=30):
-        """ """
         timeout = int(timeout)
         payload = self._build_payload(commands, method)
 
