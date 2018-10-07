@@ -26,7 +26,7 @@ class RPCClient(object):
         self.password = password
         self.verify = verify
 
-    def _build_payload(self, commands, method, rpc_version="2.0"):
+    def _build_payload(self, commands, method, rpc_version="2.0", api_version=1.0):
         payload_list = []
 
         id_num = 1
@@ -34,7 +34,7 @@ class RPCClient(object):
             payload = dict(
                 jsonrpc=rpc_version,
                 method=method,
-                params=dict(cmd=command, version=1),
+                params=dict(cmd=command, version=api_version),
                 id=id_num,
             )
             payload_list.append(payload)

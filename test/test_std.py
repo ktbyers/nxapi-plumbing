@@ -22,7 +22,25 @@ def test_pynxos_attributes(mock_pynxos_device):
 
 
 def test_build_payload(mock_pynxos_device):
-    assert True
+    """
+    Payload format should be as follows:
+    [
+        {
+            'id': 1,
+            'jsonrpc': '2.0',
+            'method': 'cli',
+            'params': {'cmd': 'show hostname', 'version': 1.0}
+        }
+    ]
+    """
+    payload = mock_pynxos_device.rpc._build_payload(["show hostname"], method="cli")
+    assert isinstance(payload, list)
+    payload_dict = payload[0]
+    assert payload_dict['id'] == 1
+    assert payload_dict['jsonrpc'] == "2.0"
+    assert payload_dict['method'] == 'cli'
+    assert payload_dict['params']['cmd'] == 'show hostname'
+    assert payload_dict['params']['version'] == 1.0
 
 
 def test_show_hostname(mock_pynxos_device):
