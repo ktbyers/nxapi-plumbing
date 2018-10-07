@@ -8,7 +8,7 @@ import json
 from xml.dom import minidom
 from six import string_types
 
-from pynxos.errors import NXOSError, NXAPIPostError, NXAPICommandError
+from pynxos.errors import NXAPIError, NXAPIPostError, NXAPICommandError
 
 
 class RPCBase(object):
@@ -25,7 +25,7 @@ class RPCBase(object):
         verify=True,
     ):
         if transport not in ["http", "https"]:
-            raise NXOSError("'{}' is an invalid transport.".format(transport))
+            raise NXAPIError("'{}' is an invalid transport.".format(transport))
 
         if port is None:
             if transport == "http":

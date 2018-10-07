@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 
 
-class NXOSError(Exception):
+class NXAPIError(Exception):
     def __init__(self, message):
         self.message = message
 
@@ -11,7 +11,7 @@ class NXOSError(Exception):
     __str__ = __repr__
 
 
-class NXAPICommandError(NXOSError):
+class NXAPICommandError(NXAPIError):
     def __init__(self, command, message):
         self.command = command
         self.message = message
@@ -24,7 +24,6 @@ class NXAPICommandError(NXOSError):
     __str__ = __repr__
 
 
-class NXAPIPostError(NXOSError):
+class NXAPIPostError(NXAPIError):
     """Status code returned by NXAPI indicates an error occurred."""
-
     pass
