@@ -5,7 +5,7 @@ from requests.auth import HTTPBasicAuth
 import json
 
 from pynxos import Device
-from pynxos.lib.rpc_client import RPCClient
+from pynxos.rpc_client import RPCClient
 
 
 def mock_post(url, timeout, data, headers, auth, verify):

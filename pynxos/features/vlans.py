@@ -1,5 +1,5 @@
-from pynxos.lib.data_model.converters import converted_list_from_table
-from pynxos.lib.data_model.key_maps import VLAN_KEY_MAP
+from pynxos.converters import converted_list_from_table
+from pynxos.key_maps import VLAN_KEY_MAP
 
 from .base_feature import BaseFeature
 

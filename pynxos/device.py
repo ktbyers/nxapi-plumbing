@@ -8,9 +8,9 @@ from pynxos.errors import CLIError, NXOSError
 from pynxos.features.file_copy import FileCopy
 from pynxos.features.vlans import Vlans
 
-from .lib import convert_dict_by_key, converted_list_from_table, strip_unicode
-from .lib.data_model import key_maps
-from .lib.rpc_client import RPCClient, XMLClient
+from .converters import convert_dict_by_key, converted_list_from_table, strip_unicode
+from . import key_maps
+from .rpc_client import RPCClient, XMLClient
 
 
 class RebootSignal(NXOSError):
