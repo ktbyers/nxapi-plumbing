@@ -62,7 +62,7 @@ status_code: {}""".format(
             )
             raise NXAPIPostError(msg)
 
-        return self._process_api_request(response, commands)
+        return self._process_api_response(response, commands)
 
     def _error_check(self, command_response):
         error = command_response.get("error")
