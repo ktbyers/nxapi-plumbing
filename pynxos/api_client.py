@@ -61,16 +61,16 @@ class RPCClient(RPCBase):
         self.api = "jsonrpc"
 
     def _build_payload(self, commands, method, rpc_version="2.0", api_version=1.0):
+        """Construct the JSON-RPC payload for NX-API."""
         payload_list = []
-
         id_num = 1
         for command in commands:
-            payload = dict(
-                jsonrpc=rpc_version,
-                method=method,
-                params=dict(cmd=command, version=api_version),
-                id=id_num,
-            )
+            payload = {
+                "jsonrpc": rpc_version,
+                "method": method,
+                "params": {"cmd": command, "version": api_version},
+                "id": id_num,
+            }
             payload_list.append(payload)
             id_num += 1
         return payload_list
