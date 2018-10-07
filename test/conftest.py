@@ -42,9 +42,16 @@ def pytest_addoption(parser):
 @pytest.fixture(scope="module")
 def mock_pynxos_device(request):
     """Create a mock pynxos test device."""
-    device_under_test = request.config.getoption("test_device")
-    test_devices = parse_yaml(PWD + "/etc/test_devices.yml")
-    device = test_devices[device_under_test]
+    device = {
+        "host": 'nxos1.fake.com',
+        "username": 'admin',
+        "password": 'foo',
+        "transport": "https",
+        "encoding": "rpc",
+        "port": 8443,
+        "timeout": 60,
+        "verify": False,
+    }
     conn = MockDevice(**device)
     return conn
 

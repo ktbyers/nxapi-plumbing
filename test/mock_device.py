@@ -13,7 +13,7 @@ def mock_post(url, timeout, data, headers, auth, verify):
 
     # Construct the path to search for the mocked data
     # e.g. ./mocked_data/jsonrpc_show_hostname/response.json
-    base_dir = "./mocked_data"
+    base_dir = "test/mocked_data"
     data = json.loads(data)
     if data[0].get("jsonrpc"):
         api_type = "jsonrpc"
@@ -84,7 +84,6 @@ class MockRPCClient(RPCClient):
         # Modified from actual behavior here to simplify the mocking
         # response_list = json.loads(response.text)
         response_list = mock_response
-        print(response_list)
 
         if isinstance(response_list, dict):
             response_list = [response_list]

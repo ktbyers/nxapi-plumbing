@@ -3,9 +3,9 @@ from __future__ import unicode_literals
 import time
 
 
-def test_pynxos_real(pynxos_device):
-    print(pynxos_device.show("show version"))
-    assert True
+#def test_pynxos_real(pynxos_device):
+#    print(pynxos_device.show("show version"))
+#    assert True
 
 def test_pynxos_attributes(mock_pynxos_device):
     pynxos_device = mock_pynxos_device
@@ -17,9 +17,6 @@ def test_pynxos_attributes(mock_pynxos_device):
     assert pynxos_device.encoding == 'rpc'
     assert pynxos_device.timeout == 60
     assert pynxos_device.verify == False
-
-    print(pynxos_device.show("show hostname"))
-    assert True
 
 def test_build_payload(mock_pynxos_device):
     assert True
