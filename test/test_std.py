@@ -2,6 +2,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 import time
 import json
+from lxml import etree
 
 
 # def test_real_device(pynxos_device):
@@ -34,7 +35,8 @@ def test_build_payload(mock_pynxos_device):
         }
     ]
     """
-    payload = mock_pynxos_device.api._build_payload(["show hostname"], method="cli")
+    mock_device = mock_pynxos_device
+    payload = mock_device.api._build_payload(["show hostname"], method="cli")
     payload = json.loads(payload)
     assert isinstance(payload, list)
     payload_dict = payload[0]
@@ -43,6 +45,40 @@ def test_build_payload(mock_pynxos_device):
     assert payload_dict["method"] == "cli"
     assert payload_dict["params"]["cmd"] == "show hostname"
     assert payload_dict["params"]["version"] == 1.0
+
+
+def test_build_payload_xml(mock_pynxos_device_xml):
+    """
+    Payload format should be as follows:
+    <?xml version="1.0"?>
+    <ins_api>
+      <version>1.2</version>
+      <type>cli_show</type>
+      <chunk>0</chunk>
+      <sid>sid</sid>
+      <input>show hostname</input>
+      <output_format>xml</output_format>
+    </ins_api>
+    """
+    mock_device = mock_pynxos_device_xml
+    payload = mock_device.api._build_payload(["show hostname"], method="cli_show")
+    xml_root = etree.fromstring(payload)
+    assert xml_root.tag == "ins_api"
+    version = xml_root.xpath("/ins_api/version")[0]
+    api_method = xml_root.xpath("/ins_api/type")[0]
+    sid = xml_root.xpath("/ins_api/sid")[0]
+    api_cmd = xml_root.xpath("/ins_api/input")[0]
+    output_format = xml_root.xpath("/ins_api/output_format")[0]
+    assert version.tag == "version"
+    assert version.text == "1.0"
+    assert api_method.tag == "type"
+    assert api_method.text == "cli_show"
+    assert sid.tag == "sid"
+    assert sid.text == "sid"
+    assert api_cmd.tag == "input"
+    assert api_cmd.text == "show hostname"
+    assert output_format.tag == "output_format"
+    assert output_format.text == "xml"
 
 
 def test_show_hostname(mock_pynxos_device):

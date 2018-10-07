@@ -26,4 +26,5 @@ class NXAPICommandError(NXAPIError):
 
 class NXAPIPostError(NXAPIError):
     """Status code returned by NXAPI indicates an error occurred."""
+
     pass

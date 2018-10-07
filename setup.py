@@ -4,7 +4,7 @@ import os
 import re
 
 
-requirements = ["requests>=2.7.0", "future", "scp", "six"]
+requirements = ["requests>=2.7.0", "lxml", "future", "scp", "six"]
 
 with open("README.md", "r") as fs:
     long_description = fs.read()
@@ -32,7 +32,7 @@ def find_version(*file_paths):
 setup(
     name="pynxos",
     version=find_version("pynxos", "__init__.py"),
-    description="A library for managing Cisco NX-OS devices through NX-API using either XML or jsonrpc.",
+    description="A library for managing Cisco NX-OS devices through NX-API using XML or jsonrpc.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/ktbyers/pynxos2",

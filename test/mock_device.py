@@ -5,7 +5,7 @@ from requests.auth import HTTPBasicAuth
 import json
 
 from pynxos import Device
-from pynxos import RPCClient
+from pynxos import RPCClient, XMLClient
 
 
 def mock_post(url, timeout, data, headers, auth, verify):
@@ -25,6 +25,11 @@ def mock_post(url, timeout, data, headers, auth, verify):
 
     with open(file_path) as f:
         return json.load(f)
+
+
+def mock_post_xml(url, timeout, data, headers, auth, verify):
+    """Look up the response based on the URL and payload."""
+    pass
 
 
 class MockDevice(Device):
@@ -49,15 +54,26 @@ class MockDevice(Device):
             timeout=timeout,
             verify=verify,
         )
-        self.api = MockRPCClient(
-            host,
-            username,
-            password,
-            transport=transport,
-            port=port,
-            timeout=timeout,
-            verify=verify,
-        )
+        if api_format == "jsonrpc":
+            self.api = MockRPCClient(
+                host,
+                username,
+                password,
+                transport=transport,
+                port=port,
+                timeout=timeout,
+                verify=verify,
+            )
+        elif api_format == "xml":
+            self.api = MockXMLClient(
+                host,
+                username,
+                password,
+                transport=transport,
+                port=port,
+                timeout=timeout,
+                verify=verify,
+            )
 
 
 class MockRPCClient(RPCClient):
@@ -98,3 +114,19 @@ class MockRPCClient(RPCClient):
         for i, response_dict in enumerate(response_list):
             response_dict["command"] = commands[i]
         return response_list
+
+
+class MockXMLClient(XMLClient):
+    def _send_request(self, commands, method="cli_show"):
+        payload = self._build_payload(commands, method)
+
+        mock_response = mock_post_xml(
+            self.url,
+            timeout=self.timeout,
+            data=payload,
+            headers=self.headers,
+            auth=HTTPBasicAuth(self.username, self.password),
+            verify=self.verify,
+        )
+
+        return self._process_api_response(response, commands)
