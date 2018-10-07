@@ -5,7 +5,9 @@ import requests
 from requests.auth import HTTPBasicAuth
 import json
 
-from pynxos.errors import NXOSError, NXAPIPostError
+from xml.dom import minidom
+
+from pynxos.errors import NXOSError, NXAPIPostError, NXAPICommandError
 
 
 class RPCBase(object):
@@ -46,13 +48,22 @@ class RPCBase(object):
 
         if response.status_code not in [200]:
             msg = """Invalid status code returned on NX-API POST
-commands: {} 
+commands: {}
 status_code: {}""".format(
                 commands, response.status_code
             )
             raise NXAPIPostError(msg)
 
         return self._process_api_request(response, commands)
+
+    def _error_check(self, command_response):
+        error = command_response.get("error")
+        if error:
+            command = command_response.get("command")
+            if "data" in error:
+                raise NXAPICommandError(command, error["data"]["msg"])
+            else:
+                raise NXAPICommandError(command, "Invalid command.")
 
 
 class RPCClient(RPCBase):
@@ -133,3 +144,19 @@ class XMLClient(RPCBase):
 
     def send_request(self, commands, method="cli_show", timeout=30):
         return self._send_request(commands, method=method, timeout=timeout)
+
+    def _error_check(self, command_response):
+        def NodeAsText(node):
+            # convert a XML element to a string
+            try:
+                nodetext = node[0].firstChild.data.strip()
+                return nodetext
+            except IndexError:
+                return "__na__"
+
+        # creates an xml object and identifies the clierror element
+        dom = minidom.parseString(command_response["response"])
+        node = dom.getElementsByTagName("clierror")
+
+        if "__na__" != NodeAsText(node):
+            raise NXAPICommandError(command_response["command"], NodeAsText(node))

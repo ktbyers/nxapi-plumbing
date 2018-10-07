@@ -11,7 +11,7 @@ class NXOSError(Exception):
     __str__ = __repr__
 
 
-class CLIError(NXOSError):
+class NXAPICommandError(NXOSError):
     def __init__(self, command, message):
         self.command = command
         self.message = message

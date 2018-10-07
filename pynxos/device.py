@@ -3,9 +3,8 @@ from __future__ import print_function, unicode_literals
 import re
 import signal
 from six import string_types
-from xml.dom import minidom
 
-from pynxos.errors import CLIError, NXOSError
+from pynxos.errors import NXAPICommandError, NXOSError
 from pynxos.file_copy import FileCopy
 from pynxos.vlans import Vlans
 
@@ -54,31 +53,6 @@ class Device(object):
             self.cmd_method = "cli"
             self.cmd_method_raw = "cli_ascii"
 
-    def _cli_error_check(self, command_response):
-        error = command_response.get("error")
-        if error:
-            command = command_response.get("command")
-            if "data" in error:
-                raise CLIError(command, error["data"]["msg"])
-            else:
-                raise CLIError(command, "Invalid command.")
-
-    def _cli_error_check_xml(self, command_response):
-        def NodeAsText(node):
-            # convert a XML element to a string
-            try:
-                nodetext = node[0].firstChild.data.strip()
-                return nodetext
-            except IndexError:
-                return "__na__"
-
-        # creates an xml object and identifies the clierror element
-        dom = minidom.parseString(command_response["response"])
-        node = dom.getElementsByTagName("clierror")
-
-        if "__na__" != NodeAsText(node):
-            raise CLIError(command_response["command"], NodeAsText(node))
-
     def _nxapi_command(self, commands, method=None):
         """Send a command down the NX-API channel."""
         if method is None:
@@ -93,10 +67,10 @@ class Device(object):
         text_response_list = []
         for command_response in api_response:
             if self.api_format == "jsonrpc":
-                self._cli_error_check(command_response)
+                self.api._error_check(command_response)
                 text_response_list.append(command_response["result"])
             elif self.api_format == "xml":
-                self._cli_error_check_xml(command_response)
+                self.api._error_check_xml(command_response)
                 text_response_list.append(api_response)
 
         return text_response_list
@@ -155,7 +129,7 @@ class Device(object):
             command (str): The command to send to the device.
 
         Raises:
-            CLIError: If there is a problem with the supplied command.
+            NXAPICommandError: If there is a problem with the supplied command.
         """
         commands = [command]
         list_result = self.config_list(commands)
@@ -168,7 +142,7 @@ class Device(object):
             commands (list): A list of commands to send to the device.
 
         Raises:
-            CLIError: If there is a problem with one of the commands in the list.
+            NXAPICommandError: If there is a problem with one of the commands in the list.
         """
         return self._nxapi_command(commands)
 
@@ -182,7 +156,7 @@ class Device(object):
         """
         try:
             self.show("copy run %s" % filename, raw_text=True)
-        except CLIError as e:
+        except NXAPICommandError as e:
             if "overwrite" in e.message:
                 return False
             raise
@@ -273,7 +247,7 @@ class Device(object):
                     "install all system %s kickstart %s" % (image_name, kickstart),
                     raw_text=True,
                 )
-        except CLIError:
+        except NXAPICommandError:
             pass
 
     def get_boot_options(self):
@@ -356,7 +330,7 @@ class Device(object):
             interface_list = converted_list_from_table(
                 interface_table, "interface", key_maps.INTERFACE_KEY_MAP, fill_in=True
             )
-        except CLIError:
+        except NXAPICommandError:
             return []
         return interface_list
 

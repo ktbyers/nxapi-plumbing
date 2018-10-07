@@ -1,7 +1,3 @@
-import sys
-import collections
-
-
 def convert_dict_by_key(original, key_map, fill_in=False, whitelist=[], blacklist=[]):
     converted = {}
     for converted_key in key_map:
