@@ -64,11 +64,11 @@ def test_build_payload_xml(mock_pynxos_device_xml):
     payload = mock_device.api._build_payload(["show hostname"], method="cli_show")
     xml_root = etree.fromstring(payload)
     assert xml_root.tag == "ins_api"
-    version = xml_root.xpath("/ins_api/version")[0]
-    api_method = xml_root.xpath("/ins_api/type")[0]
-    sid = xml_root.xpath("/ins_api/sid")[0]
-    api_cmd = xml_root.xpath("/ins_api/input")[0]
-    output_format = xml_root.xpath("/ins_api/output_format")[0]
+    version = xml_root.find("./version")
+    api_method = xml_root.find("./type")
+    sid = xml_root.find("./sid")
+    api_cmd = xml_root.find("./input")
+    output_format = xml_root.find("./output_format")
     assert version.tag == "version"
     assert version.text == "1.0"
     assert api_method.tag == "type"
