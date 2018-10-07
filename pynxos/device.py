@@ -92,10 +92,10 @@ class Device(object):
 
         text_response_list = []
         for command_response in api_response:
-            if self.api_format == 'jsonrpc':
+            if self.api_format == "jsonrpc":
                 self._cli_error_check(command_response)
                 text_response_list.append(command_response["result"])
-            elif self.api_format == 'xml':
+            elif self.api_format == "xml":
                 self._cli_error_check_xml(command_response)
                 text_response_list.append(api_response)
 
@@ -132,33 +132,21 @@ class Device(object):
             A list of outputs for each show command
         """
         return_list = []
+        cmd_method = self.cmd_method_raw if raw_text else self.cmd_method
+        response_list = self._cli_command(commands, method=cmd_method)
+
         if self.api_format == "jsonrpc":
-            if raw_text:
-                response_list = self._cli_command(commands, method="cli_ascii")
-                for response in response_list:
-                    if response:
-                        return_list.append(response["msg"])
-            else:
-                response_list = self._cli_command(commands)
-                for response in response_list:
-                    if response:
-                        return_list.append(response["body"])
-
-            return return_list
-
+            for response in response_list:
+                if response and raw_text:
+                    return_list.append(response["msg"])
+                if response and not raw_text:
+                    return_list.append(response["body"])
         elif self.api_format == "xml":
-            if raw_text:
-                response_list = self._cli_command_xml(commands, method="cli_show_ascii")
-                for response in response_list:
-                    if response:
-                        return_list.append(response)
-            else:
-                response_list = self._cli_command_xml(commands)
-                for response in response_list:
-                    if response:
-                        return_list.append(response)
+            for response in response_list:
+                if response:
+                    return_list.append(response)
 
-            return return_list
+        return return_list
 
     def config(self, command):
         """Send a configuration command.
