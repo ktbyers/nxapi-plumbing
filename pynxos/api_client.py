@@ -5,10 +5,12 @@ import requests
 from requests.auth import HTTPBasicAuth
 import json
 
-from pynxos.errors import NXOSError
+from pynxos.errors import NXOSError, NXAPIPostError
 
 
 class RPCBase(object):
+    """RPCBase class should be API-type neutral (i.e. shouldn't care whether XML or jsonrpc)."""
+
     def __init__(
         self, host, username, password, transport="https", port=None, verify=True
     ):
@@ -26,11 +28,12 @@ class RPCBase(object):
         self.password = password
         self.verify = verify
 
+    def _process_api_response(self, response, commands):
+        raise NotImplementedError("Method must be implemented in child class")
+
     def _send_request(self, commands, method, timeout=30):
         timeout = int(timeout)
         payload = self._build_payload(commands, method)
-        if self.api == "jsonrpc":
-            payload = json.dumps(payload)
 
         response = requests.post(
             self.url,
@@ -41,17 +44,15 @@ class RPCBase(object):
             verify=self.verify,
         )
 
-        if self.api == "jsonrpc":
-            response_list = json.loads(response.text)
-            if isinstance(response_list, dict):
-                response_list = [response_list]
-        elif self.api == "xml":
-            response_list = [{"response": response.text}]
+        if response.status_code not in [200]:
+            msg = """Invalid status code returned on NX-API POST
+commands: {} 
+status_code: {}""".format(
+                commands, response.status_code
+            )
+            raise NXAPIPostError(msg)
 
-        # Add the 'command' that was executed to the response dictionary
-        for i, response_dict in enumerate(response_list):
-            response_dict["command"] = commands[i]
-        return response_list
+        return self._process_api_request(response, commands)
 
 
 class RPCClient(RPCBase):
@@ -73,7 +74,18 @@ class RPCClient(RPCBase):
             }
             payload_list.append(payload)
             id_num += 1
-        return payload_list
+
+        return json.dumps(payload_list)
+
+    def _process_api_response(self, response, commands):
+        response_list = json.loads(response.text)
+        if isinstance(response_list, dict):
+            response_list = [response_list]
+
+        # Add the 'command' that was executed to the response dictionary
+        for i, response_dict in enumerate(response_list):
+            response_dict["command"] = commands[i]
+        return response_list
 
     def send_request(self, commands, method="cli", timeout=30):
         return self._send_request(commands, method=method, timeout=timeout)
@@ -110,6 +122,14 @@ class XMLClient(RPCBase):
             command=xml_commands,
         )
         return payload
+
+    def _process_api_response(self, response, commands):
+        response_list = [{"response": response.text}]
+
+        # Add the 'command' that was executed to the response dictionary
+        for i, response_dict in enumerate(response_list):
+            response_dict["command"] = commands[i]
+        return response_list
 
     def send_request(self, commands, method="cli_show", timeout=30):
         return self._send_request(commands, method=method, timeout=timeout)

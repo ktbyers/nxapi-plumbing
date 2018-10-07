@@ -11,7 +11,6 @@ from pynxos.vlans import Vlans
 
 from pynxos.converters import convert_dict_by_key
 from pynxos.converters import converted_list_from_table
-from pynxos.converters import strip_unicode
 
 from pynxos import key_maps
 from pynxos.api_client import RPCClient, XMLClient
@@ -80,7 +79,8 @@ class Device(object):
         if "__na__" != NodeAsText(node):
             raise CLIError(command_response["command"], NodeAsText(node))
 
-    def _cli_command(self, commands, method=None):
+    def _nxapi_command(self, commands, method=None):
+        """Send a command down the NX-API channel."""
         if method is None:
             method = self.cmd_method
         if isinstance(commands, string_types):
@@ -99,7 +99,7 @@ class Device(object):
                 self._cli_error_check_xml(command_response)
                 text_response_list.append(api_response)
 
-        return strip_unicode(text_response_list)
+        return text_response_list
 
     def show(self, command, raw_text=False):
         """Send a non-configuration command.
@@ -133,7 +133,7 @@ class Device(object):
         """
         return_list = []
         cmd_method = self.cmd_method_raw if raw_text else self.cmd_method
-        response_list = self._cli_command(commands, method=cmd_method)
+        response_list = self._nxapi_command(commands, method=cmd_method)
 
         if self.api_format == "jsonrpc":
             for response in response_list:
@@ -170,7 +170,7 @@ class Device(object):
         Raises:
             CLIError: If there is a problem with one of the commands in the list.
         """
-        return self._cli_command(commands)
+        return self._nxapi_command(commands)
 
     def save(self, filename="startup-config"):
         """Save a device's running configuration.

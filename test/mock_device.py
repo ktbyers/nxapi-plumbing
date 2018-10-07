@@ -61,13 +61,13 @@ class MockRPCClient(RPCClient):
         instead of the normal response.
         """
         timeout = int(timeout)
-        payload_list = self._build_payload(commands, method)
+        payload = self._build_payload(commands, method)
 
         if post_args is True:
             return {
                 "url": self.url,
                 "timeout": timeout,
-                "data": payload_list,
+                "data": payload,
                 "headers": self.headers,
                 "auth": HTTPBasicAuth(self.username, self.password),
                 "verify": self.verify,
@@ -76,7 +76,7 @@ class MockRPCClient(RPCClient):
         mock_response = mock_post(
             self.url,
             timeout=timeout,
-            data=json.dumps(payload_list),
+            data=payload,
             headers=self.headers,
             auth=HTTPBasicAuth(self.username, self.password),
             verify=self.verify,

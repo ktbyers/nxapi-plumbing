@@ -1,6 +1,7 @@
 from __future__ import print_function
 from __future__ import unicode_literals
 import time
+import json
 
 
 # def test_real_device(pynxos_device):
@@ -35,6 +36,7 @@ def test_build_payload(mock_pynxos_device):
     ]
     """
     payload = mock_pynxos_device.api._build_payload(["show hostname"], method="cli")
+    payload = json.loads(payload)
     assert isinstance(payload, list)
     payload_dict = payload[0]
     assert payload_dict["id"] == 1
