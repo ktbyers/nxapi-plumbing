@@ -5,8 +5,8 @@ import signal
 from xml.dom import minidom
 
 from pynxos.errors import CLIError, NXOSError
-from pynxos.features.file_copy import FileCopy
-from pynxos.features.vlans import Vlans
+from pynxos.file_copy import FileCopy
+from pynxos.vlans import Vlans
 
 from pynxos.converters import (
     convert_dict_by_key,
