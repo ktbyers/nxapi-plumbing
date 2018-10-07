@@ -17,7 +17,7 @@ def test_pynxos_attributes(mock_pynxos_device):
     assert pynxos_device.password == "foo"
     assert pynxos_device.port == 8443
     assert pynxos_device.transport == "https"
-    assert pynxos_device.encoding == "rpc"
+    assert pynxos_device.api_format == "jsonrpc"
     assert pynxos_device.timeout == 60
     assert pynxos_device.verify == False
 
@@ -34,7 +34,7 @@ def test_build_payload(mock_pynxos_device):
         }
     ]
     """
-    payload = mock_pynxos_device.rpc._build_payload(["show hostname"], method="cli")
+    payload = mock_pynxos_device.api._build_payload(["show hostname"], method="cli")
     assert isinstance(payload, list)
     payload_dict = payload[0]
     assert payload_dict["id"] == 1

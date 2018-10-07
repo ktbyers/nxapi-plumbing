@@ -34,7 +34,7 @@ class MockDevice(Device):
         username,
         password,
         transport="http",
-        encoding="rpc",
+        api_format="jsonrpc",
         port=None,
         timeout=30,
         verify=True,
@@ -44,12 +44,12 @@ class MockDevice(Device):
             username,
             password,
             transport=transport,
-            encoding=encoding,
+            api_format=api_format,
             port=port,
             timeout=timeout,
             verify=verify,
         )
-        self.rpc = MockRPCClient(
+        self.api = MockRPCClient(
             host, username, password, transport=transport, port=port, verify=verify
         )
 

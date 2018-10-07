@@ -2,17 +2,17 @@ from __future__ import print_function, unicode_literals
 
 import re
 import signal
+from six import string_types
 from xml.dom import minidom
 
 from pynxos.errors import CLIError, NXOSError
 from pynxos.file_copy import FileCopy
 from pynxos.vlans import Vlans
 
-from pynxos.converters import (
-    convert_dict_by_key,
-    converted_list_from_table,
-    strip_unicode,
-)
+from pynxos.converters import convert_dict_by_key
+from pynxos.converters import converted_list_from_table
+from pynxos.converters import strip_unicode
+
 from pynxos import key_maps
 from pynxos.api_client import RPCClient, XMLClient
 
@@ -28,7 +28,7 @@ class Device(object):
         username,
         password,
         transport="http",
-        encoding="rpc",
+        api_format="jsonrpc",
         port=None,
         timeout=30,
         verify=True,
@@ -37,19 +37,23 @@ class Device(object):
         self.username = username
         self.password = password
         self.transport = transport
-        self.encoding = encoding
+        self.api_format = api_format
         self.timeout = timeout
         self.verify = verify
         self.port = port
 
-        if encoding == "xml":
-            self.xml = XMLClient(
+        if api_format == "xml":
+            self.api = XMLClient(
                 host, username, password, transport=transport, port=port, verify=verify
             )
-        elif encoding == "rpc":
-            self.rpc = RPCClient(
+            self.cmd_method = "cli_show"
+            self.cmd_method_raw = "cli_show_ascii"
+        elif api_format == "jsonrpc":
+            self.api = RPCClient(
                 host, username, password, transport=transport, port=port, verify=verify
             )
+            self.cmd_method = "cli"
+            self.cmd_method_raw = "cli_ascii"
 
     def _cli_error_check(self, command_response):
         error = command_response.get("error")
@@ -76,32 +80,24 @@ class Device(object):
         if "__na__" != NodeAsText(node):
             raise CLIError(command_response["command"], NodeAsText(node))
 
-    def _cli_command(self, commands, method="cli"):
-        if not isinstance(commands, list):
+    def _cli_command(self, commands, method=None):
+        if method is None:
+            method = self.cmd_method
+        if isinstance(commands, string_types):
             commands = [commands]
 
-        rpc_response = self.rpc.send_request(
+        api_response = self.api.send_request(
             commands, method=method, timeout=self.timeout
         )
 
         text_response_list = []
-        for command_response in rpc_response:
-            self._cli_error_check(command_response)
-            text_response_list.append(command_response["result"])
-
-        return strip_unicode(text_response_list)
-
-    def _cli_command_xml(self, commands, method="cli_show"):
-        if not isinstance(commands, list):
-            commands = [commands]
-
-        xml_response = self.xml.send_request(
-            commands, method=method, timeout=self.timeout
-        )
-        text_response_list = []
-        for command_response in xml_response:
-            self._cli_error_check_xml(command_response)
-            text_response_list.append(xml_response)
+        for command_response in api_response:
+            if self.api_format == 'jsonrpc':
+                self._cli_error_check(command_response)
+                text_response_list.append(command_response["result"])
+            elif self.api_format == 'xml':
+                self._cli_error_check_xml(command_response)
+                text_response_list.append(api_response)
 
         return strip_unicode(text_response_list)
 
@@ -119,11 +115,9 @@ class Device(object):
         """
         commands = [command]
         list_result = self.show_list(commands, raw_text)
-
         if list_result:
             return list_result[0]
-        else:
-            return {}
+        return {}
 
     def show_list(self, commands, raw_text=False):
         """Send a list of non-configuration commands.
@@ -138,7 +132,7 @@ class Device(object):
             A list of outputs for each show command
         """
         return_list = []
-        if self.encoding == "rpc":
+        if self.api_format == "jsonrpc":
             if raw_text:
                 response_list = self._cli_command(commands, method="cli_ascii")
                 for response in response_list:
@@ -152,7 +146,7 @@ class Device(object):
 
             return return_list
 
-        elif self.encoding == "xml":
+        elif self.api_format == "xml":
             if raw_text:
                 response_list = self._cli_command_xml(commands, method="cli_show_ascii")
                 for response in response_list:

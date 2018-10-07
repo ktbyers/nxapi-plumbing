@@ -47,7 +47,7 @@ def mock_pynxos_device(request):
         "username": "admin",
         "password": "foo",
         "transport": "https",
-        "encoding": "rpc",
+        "api_format": "jsonrpc",
         "port": 8443,
         "timeout": 60,
         "verify": False,
