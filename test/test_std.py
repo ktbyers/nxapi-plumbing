@@ -19,7 +19,6 @@ def test_pynxos_attributes(mock_pynxos_device):
     assert pynxos_device.port == 8443
     assert pynxos_device.transport == "https"
     assert pynxos_device.api_format == "jsonrpc"
-    assert pynxos_device.timeout == 60
     assert pynxos_device.verify == False
 
 

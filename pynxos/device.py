@@ -2,7 +2,6 @@ from __future__ import print_function, unicode_literals
 
 import re
 import signal
-from six import string_types
 
 from pynxos.errors import NXAPICommandError, NXOSError
 from pynxos.file_copy import FileCopy
@@ -36,44 +35,29 @@ class Device(object):
         self.password = password
         self.transport = transport
         self.api_format = api_format
-        self.timeout = timeout
         self.verify = verify
         self.port = port
 
         if api_format == "xml":
             self.api = XMLClient(
-                host, username, password, transport=transport, port=port, verify=verify
+                host,
+                username,
+                password,
+                transport=transport,
+                port=port,
+                timeout=timeout,
+                verify=verify,
             )
-            self.cmd_method = "cli_show"
-            self.cmd_method_raw = "cli_show_ascii"
         elif api_format == "jsonrpc":
             self.api = RPCClient(
-                host, username, password, transport=transport, port=port, verify=verify
+                host,
+                username,
+                password,
+                transport=transport,
+                port=port,
+                timeout=timeout,
+                verify=verify,
             )
-            self.cmd_method = "cli"
-            self.cmd_method_raw = "cli_ascii"
-
-    def _nxapi_command(self, commands, method=None):
-        """Send a command down the NX-API channel."""
-        if method is None:
-            method = self.cmd_method
-        if isinstance(commands, string_types):
-            commands = [commands]
-
-        api_response = self.api.send_request(
-            commands, method=method, timeout=self.timeout
-        )
-
-        text_response_list = []
-        for command_response in api_response:
-            if self.api_format == "jsonrpc":
-                self.api._error_check(command_response)
-                text_response_list.append(command_response["result"])
-            elif self.api_format == "xml":
-                self.api._error_check_xml(command_response)
-                text_response_list.append(api_response)
-
-        return text_response_list
 
     def show(self, command, raw_text=False):
         """Send a non-configuration command.
@@ -106,8 +90,8 @@ class Device(object):
             A list of outputs for each show command
         """
         return_list = []
-        cmd_method = self.cmd_method_raw if raw_text else self.cmd_method
-        response_list = self._nxapi_command(commands, method=cmd_method)
+        cmd_method = self.api.cmd_method_raw if raw_text else self.api.cmd_method
+        response_list = self.api._nxapi_command(commands, method=cmd_method)
 
         if self.api_format == "jsonrpc":
             for response in response_list:
@@ -144,7 +128,7 @@ class Device(object):
         Raises:
             NXAPICommandError: If there is a problem with one of the commands in the list.
         """
-        return self._nxapi_command(commands)
+        return self.api._nxapi_command(commands)
 
     def save(self, filename="startup-config"):
         """Save a device's running configuration.

@@ -50,12 +50,18 @@ class MockDevice(Device):
             verify=verify,
         )
         self.api = MockRPCClient(
-            host, username, password, transport=transport, port=port, verify=verify
+            host,
+            username,
+            password,
+            transport=transport,
+            port=port,
+            timeout=timeout,
+            verify=verify,
         )
 
 
 class MockRPCClient(RPCClient):
-    def send_request(self, commands, method="cli", timeout=30, post_args=False):
+    def _send_request(self, commands, method="cli", timeout=30, post_args=False):
         """
         post_args is for testing only and will return the post arguments as a dictionary
         instead of the normal response.
