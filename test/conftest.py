@@ -43,9 +43,9 @@ def pytest_addoption(parser):
 def mock_pynxos_device(request):
     """Create a mock pynxos test device."""
     device = {
-        "host": 'nxos1.fake.com',
-        "username": 'admin',
-        "password": 'foo',
+        "host": "nxos1.fake.com",
+        "username": "admin",
+        "password": "foo",
         "transport": "https",
         "encoding": "rpc",
         "port": 8443,

@@ -1,6 +1,6 @@
-pylama
-tox
-mock
-pytest
-pyyaml
+pylama==7.5.5
+tox==3.4.0
+mock==2.0.0
+pytest==3.8.2
+PyYAML==3.13
 -r requirements.txt
