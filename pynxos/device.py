@@ -10,8 +10,7 @@ from pynxos.features.vlans import Vlans
 
 from .lib import convert_dict_by_key, converted_list_from_table, strip_unicode
 from .lib.data_model import key_maps
-from .lib.rpc_client import RPCClient
-from .lib.xml_client import XMLClient
+from .lib.rpc_client import RPCClient, XMLClient
 
 
 class RebootSignal(NXOSError):
