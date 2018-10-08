@@ -1,1 +1,2 @@
-A library for managing Cisco NX-OS devices through NX-API using JSON-RPC and XML. Originally, based on pynxos, but signficantly re-written.
+A low-level library for managing Cisco devices through NX-API using JSON-RPC and XML.
+
