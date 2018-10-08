@@ -45,6 +45,32 @@ def test_build_payload(mock_pynxos_device):
     assert payload_dict["method"] == "cli"
     assert payload_dict["params"]["cmd"] == "show hostname"
     assert payload_dict["params"]["version"] == 1.0
+    payload = mock_device.api._build_payload(
+        ["show hostname", "show version"], method="cli"
+    )
+    payload = json.loads(payload)
+    assert len(payload) == 2
+    payload_dict = payload[0]
+    assert payload_dict["id"] == 1
+    assert payload_dict["jsonrpc"] == "2.0"
+    assert payload_dict["method"] == "cli"
+    assert payload_dict["params"]["cmd"] == "show hostname"
+    assert payload_dict["params"]["version"] == 1.0
+    payload_dict = payload[1]
+    assert payload_dict["id"] == 2
+    assert payload_dict["jsonrpc"] == "2.0"
+    assert payload_dict["method"] == "cli"
+    assert payload_dict["params"]["cmd"] == "show version"
+    assert payload_dict["params"]["version"] == 1.0
+    payload_dict = payload[1]
+
+
+def test_build_payload_xml(mock_pynxos_device_xml):
+
+    import pdb
+
+    pdb.set_trace()
+    print("zzzzzzz")
 
 
 def test_build_payload_xml(mock_pynxos_device_xml):
