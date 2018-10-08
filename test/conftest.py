@@ -57,6 +57,23 @@ def mock_pynxos_device(request):
 
 
 @pytest.fixture(scope="module")
+def mock_pynxos_device_xml(request):
+    """Create a mock pynxos test device."""
+    device = {
+        "host": "nxos1.fake.com",
+        "username": "admin",
+        "password": "foo",
+        "transport": "https",
+        "api_format": "xml",
+        "port": 8443,
+        "timeout": 60,
+        "verify": False,
+    }
+    conn = MockDevice(**device)
+    return conn
+
+
+@pytest.fixture(scope="module")
 def pynxos_device(request):
     """Create a real pynxos test device."""
     device_under_test = request.config.getoption("test_device")
