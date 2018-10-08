@@ -45,6 +45,19 @@ def test_show_hostname_xml(mock_pynxos_device_xml):
     assert code_obj.text == "200"
     assert response.text == "nxos.domain.com"
 
+def test_show_version_raw_xml(mock_pynxos_device_xml):
+    xml_obj = mock_pynxos_device_xml.show("show version", raw_text=True)
+    assert xml_obj.tag == 'output'
+    body_obj = xml_obj.find("./body")
+    input_obj = xml_obj.find("./input")
+    msg_obj = xml_obj.find("./msg")
+    code_obj = xml_obj.find("./code")
+    assert input_obj.text == "show version"
+    assert msg_obj.text == "Success"
+    assert code_obj.text == "200"
+    assert "Cisco Nexus Operating System" in body_obj.text
+    assert "cisco NX-OSv" in body_obj.text
+    assert "Kernel uptime" in body_obj.text
 
 def test_show_version_jsonrpc(mock_pynxos_device):
     result = mock_pynxos_device.show("show version")
