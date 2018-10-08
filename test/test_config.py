@@ -20,14 +20,24 @@ def test_config_list_jsonrpc(mock_pynxos_device):
     assert result == [None, None, None]
 
 
-# def test_show_hostname_xml(mock_pynxos_device_xml):
-#    result = mock_pynxos_device_xml.show("show hostname")
-#    xml_obj = result
-#    response = xml_obj.find("./body/hostname")
-#    input_obj = xml_obj.find("./input")
-#    msg_obj = xml_obj.find("./msg")
-#    code_obj = xml_obj.find("./code")
-#    assert input_obj.text == "show hostname"
-#    assert msg_obj.text == "Success"
-#    assert code_obj.text == "200"
-#    assert response.text == "nxos.domain.com"
+def test_config_xml(mock_pynxos_device_xml):
+    xml_obj = mock_pynxos_device_xml.config("logging history size 200")
+    status_code = xml_obj.find("./code")
+    msg = xml_obj.find("./msg")
+    assert status_code.text == "200"
+    assert msg.text == "Success"
+
+
+def test_config_xml_list(mock_pynxos_device_xml):
+    cfg_cmds = [
+        "logging history size 200",
+        "logging history size 300",
+        "logging history size 400",
+    ]
+    xml_obj = mock_pynxos_device_xml.config_list(cfg_cmds)
+    assert len(xml_obj) == 3
+    for element in xml_obj:
+        status_code = element.find("./code")
+        msg = element.find("./msg")
+        assert status_code.text == "200"
+        assert msg.text == "Success"

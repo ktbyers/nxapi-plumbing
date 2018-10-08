@@ -28,6 +28,7 @@ def test_build_payload(mock_pynxos_device):
     assert payload_dict["params"]["cmd"] == "show hostname"
     assert payload_dict["params"]["version"] == 1.0
 
+
 def test_build_payload_list(mock_pynxos_device):
     """Payload with list of commands (jsonrpc)"""
     mock_device = mock_pynxos_device
@@ -48,6 +49,7 @@ def test_build_payload_list(mock_pynxos_device):
     assert payload_dict["method"] == "cli"
     assert payload_dict["params"]["cmd"] == "show version"
     assert payload_dict["params"]["version"] == 1.0
+
 
 def test_build_payload_xml(mock_pynxos_device_xml):
     """
@@ -82,6 +84,7 @@ def test_build_payload_xml(mock_pynxos_device_xml):
     assert output_format.tag == "output_format"
     assert output_format.text == "xml"
 
+
 def test_build_payload_xml_list(mock_pynxos_device_xml):
     """Build payload with list of commands (XML)."""
     mock_device = mock_pynxos_device_xml
@@ -100,6 +103,7 @@ def test_build_payload_xml_list(mock_pynxos_device_xml):
     assert version.text == "1.0"
     assert api_method.text == "cli_show"
     assert output_format.text == "xml"
+
 
 def test_build_payload_xml_config(mock_pynxos_device_xml):
     """Build payload with list of commands (XML)."""
