@@ -1,0 +1,152 @@
+from __future__ import print_function, unicode_literals
+
+from nxapi_plumbing.errors import NXAPICommandError
+from nxapi_plumbing.api_client import RPCClient, XMLClient
+
+
+class Device(object):
+    def __init__(
+        self,
+        host,
+        username,
+        password,
+        transport="http",
+        api_format="jsonrpc",
+        port=None,
+        timeout=30,
+        verify=True,
+    ):
+        self.host = host
+        self.username = username
+        self.password = password
+        self.transport = transport
+        self.api_format = api_format
+        self.verify = verify
+        self.port = port
+
+        if api_format == "xml":
+            self.api = XMLClient(
+                host,
+                username,
+                password,
+                transport=transport,
+                port=port,
+                timeout=timeout,
+                verify=verify,
+            )
+        elif api_format == "jsonrpc":
+            self.api = RPCClient(
+                host,
+                username,
+                password,
+                transport=transport,
+                port=port,
+                timeout=timeout,
+                verify=verify,
+            )
+
+    def show(self, command, raw_text=False):
+        """Send a non-configuration command.
+
+        Args:
+            command (str): The command to send to the device.
+
+        Keyword Args:
+            raw_text (bool): Whether to return raw text or structured data.
+
+        Returns:
+            The output of the show command, which could be raw text or structured data.
+        """
+        commands = [command]
+        list_result = self.show_list(commands, raw_text)
+        if list_result:
+            return list_result[0]
+        return {}
+
+    def show_list(self, commands, raw_text=False):
+        """Send a list of non-configuration commands.
+
+        Args:
+            commands (list): A list of commands to send to the device.
+
+        Keyword Args:
+            raw_text (bool): Whether to return raw text or structured data.
+
+        Returns:
+            A list of outputs for each show command
+        """
+        return_list = []
+        cmd_method = self.api.cmd_method_raw if raw_text else self.api.cmd_method
+        response_list = self.api._nxapi_command(commands, method=cmd_method)
+
+        if self.api_format == "jsonrpc":
+            for response in response_list:
+                if response and raw_text:
+                    return_list.append(response["msg"])
+                if response and not raw_text:
+                    return_list.append(response["body"])
+        elif self.api_format == "xml":
+            return_list = response_list
+
+        return return_list
+
+    def config(self, command):
+        """Send a configuration command.
+
+        Args:
+            command (str): The command to send to the device.
+
+        Raises:
+            NXAPICommandError: If there is a problem with the supplied command.
+        """
+        commands = [command]
+        list_result = self.config_list(commands)
+        return list_result[0]
+
+    def config_list(self, commands):
+        """Send a list of configuration commands.
+
+        Args:
+            commands (list): A list of commands to send to the device.
+
+        Raises:
+            NXAPICommandError: If there is a problem with one of the commands in the list.
+        """
+        return self.api._nxapi_command_conf(commands)
+
+    def save(self, filename="startup-config"):
+        """Save a device's running configuration.
+
+        Args:
+            filename (str): The filename on the remote device.
+                If none is supplied, the implementing class should
+                save to the "startup configuration".
+        """
+        try:
+            cmd = "copy run {}".format(filename)
+            self.show(cmd, raw_text=True)
+        except NXAPICommandError as e:
+            if "overwrite" in e.message:
+                return False
+            raise
+        return True
+
+    def rollback(self, filename):
+        """Rollback to a checkpoint file.
+
+        Args:
+            filename (str): The filename of the checkpoint file to load into the running
+            configuration.
+        """
+        cmd = "rollback running-config file {}".format(filename)
+        self.show(cmd, raw_text=True)
+
+    def checkpoint(self, filename):
+        """Save a checkpoint of the running configuration to the device.
+
+        Args:
+            filename (str): The filename to save the checkpoint as on the remote device.
+        """
+        self.show_list(
+            ["terminal dont-ask", "checkpoint file {}".format(filename)], raw_text=True
+        )

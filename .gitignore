@@ -1,3 +1,13 @@
 *.pyc
 *~
 *pycache*
+.cache/*
+.pytest_cache/*
+.tox/*
+*.egg-info/*
+
+build/*
+dist/*
+
+*.swp
+/test/etc/*
