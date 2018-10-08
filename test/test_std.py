@@ -88,7 +88,7 @@ def test_show_hostname_jsonrpc(mock_pynxos_device):
 
 def test_show_hostname_xml(mock_pynxos_device_xml):
     result = mock_pynxos_device_xml.show("show hostname")
-    xml_obj = result[0]
+    xml_obj = result
     response = xml_obj.find("./body/hostname")
     input_obj = xml_obj.find("./input")
     msg_obj = xml_obj.find("./msg")
@@ -99,7 +99,7 @@ def test_show_hostname_xml(mock_pynxos_device_xml):
     assert response.text == "nxos.domain.com"
 
 
-def test_show_version(mock_pynxos_device):
+def test_show_version_jsonrpc(mock_pynxos_device):
     result = mock_pynxos_device.show("show version")
     assert result["chassis_id"] == "NX-OSv Chassis"
     assert result["memory"] == 4002196
@@ -107,7 +107,17 @@ def test_show_version(mock_pynxos_device):
     assert result["sys_ver_str"] == "7.3(1)D1(1) [build 7.3(1)D1(0.10)]"
 
 
-# def test_show_ip_int_brief(mock_pynxos_device):
-#    result = mock_pynxos_device.show("show ip int brief vrf management")
-#    assert result["TABLE_intf"]["ROW_intf"]["prefix"] == "10.0.0.71"
-#    assert result["TABLE_vrf"]["ROW_vrf"]["vrf-name-out"] == "management"
+def test_show_list_xml(mock_pynxos_device_xml):
+    cmds = ["show hostname", "show version"]
+    result = mock_pynxos_device_xml.show_list(cmds)
+    result_show_hostname = result[0]
+    result_show_version = result[1]
+    xml_obj = result_show_hostname
+    response = xml_obj.find("./body/hostname")
+    input_obj = xml_obj.find("./input")
+    msg_obj = xml_obj.find("./msg")
+    code_obj = xml_obj.find("./code")
+    assert input_obj.text == "show hostname"
+    assert msg_obj.text == "Success"
+    assert code_obj.text == "200"
+    assert response.text == "nxos.domain.com"

@@ -141,12 +141,9 @@ class XMLClient(RPCBase):
             commands = [commands]
 
         api_response = self._send_request(commands, method=method)
-
-        text_response_list = []
         for command_response in api_response:
             self._error_check(command_response)
-            text_response_list.append(api_response)
-        return text_response_list
+        return api_response
 
     def _build_payload(self, commands, method, xml_version="1.0", version="1.0"):
         xml_commands = ""

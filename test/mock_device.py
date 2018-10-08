@@ -30,6 +30,7 @@ def mock_post(url, timeout, data, headers, auth, verify, api_type="jsonrpc"):
         api_cmd = input_obj.text
         file_ext = "xml"
     api_cmd = api_cmd.replace(" ", "_")
+    api_cmd = api_cmd.replace(";", "_")
     file_path = "{base_dir}/{api_type}_{api_cmd}/response.{file_ext}".format(
         base_dir=base_dir, api_type=api_type, api_cmd=api_cmd, file_ext=file_ext
     )

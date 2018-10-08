@@ -86,9 +86,7 @@ class Device(object):
                 if response and not raw_text:
                     return_list.append(response["body"])
         elif self.api_format == "xml":
-            for response in response_list:
-                if response:
-                    return_list.append(response)
+            return_list = response_list
 
         return return_list
 
