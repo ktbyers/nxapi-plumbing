@@ -12,7 +12,7 @@ from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
-from pynxos import Device
+from nxapi_plumbing import Device
 from mock_device import MockDevice
 
 

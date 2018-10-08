@@ -30,12 +30,12 @@ def find_version(*file_paths):
 
 
 setup(
-    name="pynxos",
-    version=find_version("pynxos", "__init__.py"),
-    description="A library for managing Cisco NX-OS devices through NX-API using XML or jsonrpc.",
+    name="nxapi_plumbing",
+    version=find_version("nxapi_plumbing", "__init__.py"),
+    description="A low-level library for managing Cisco devices through NX-API using XML or jsonrpc.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/ktbyers/pynxos2",
+    url="https://github.com/ktbyers/nxapi_plumbing",
     author="Kirk Byers",
     author_email="ktbyers@twb-tech.com",
     license="Apache2",

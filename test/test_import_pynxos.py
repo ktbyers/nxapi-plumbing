@@ -1,4 +1,4 @@
-from pynxos.device import Device
+import nxapi_plumbing
 
 
 def test_import():
