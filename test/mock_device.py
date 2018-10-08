@@ -22,7 +22,11 @@ def mock_post(url, timeout, data, headers, auth, verify, api_type="jsonrpc"):
     base_dir = "test/mocked_data"
     if api_type == "jsonrpc":
         data = json.loads(data)
-        api_cmd = data[0]["params"]["cmd"]
+        if len(data) == 1:
+            api_cmd = data[0]["params"]["cmd"]
+        else:
+            cmd_list = [cmd_dict["params"]["cmd"] for cmd_dict in data]
+            api_cmd = "__".join(cmd_list)
         file_ext = "json"
     elif api_type == "xml":
         xml_root = etree.fromstring(data)
