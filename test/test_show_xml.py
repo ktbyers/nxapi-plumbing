@@ -28,9 +28,10 @@ def test_show_hostname_xml(mock_pynxos_device_xml):
     assert code_obj.text == "200"
     assert response.text == "nxos.domain.com"
 
+
 def test_show_version_raw_xml(mock_pynxos_device_xml):
     xml_obj = mock_pynxos_device_xml.show("show version", raw_text=True)
-    assert xml_obj.tag == 'output'
+    assert xml_obj.tag == "output"
     body_obj = xml_obj.find("./body")
     input_obj = xml_obj.find("./input")
     msg_obj = xml_obj.find("./msg")
