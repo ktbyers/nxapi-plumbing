@@ -9,7 +9,12 @@ from lxml import etree
 
 from six import string_types
 
-from pynxos.errors import NXAPIError, NXAPIPostError, NXAPICommandError, NXAPIXMLError
+from nxapi_plumbing.errors import (
+    NXAPIError,
+    NXAPIPostError,
+    NXAPICommandError,
+    NXAPIXMLError,
+)
 
 
 class RPCBase(object):

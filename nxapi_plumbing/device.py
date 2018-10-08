@@ -1,7 +1,7 @@
 from __future__ import print_function, unicode_literals
 
-from pynxos.errors import NXAPICommandError
-from pynxos.api_client import RPCClient, XMLClient
+from nxapi_plumbing.errors import NXAPICommandError
+from nxapi_plumbing.api_client import RPCClient, XMLClient
 
 
 class Device(object):

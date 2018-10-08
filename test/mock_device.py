@@ -5,8 +5,8 @@ from requests.auth import HTTPBasicAuth
 import json
 from lxml import etree
 
-from pynxos import Device
-from pynxos import RPCClient, XMLClient
+from nxapi_plumbing import Device
+from nxapi_plumbing import RPCClient, XMLClient
 
 
 class FakeResponse(object):
