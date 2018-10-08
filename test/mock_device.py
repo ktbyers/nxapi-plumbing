@@ -30,7 +30,7 @@ def mock_post(url, timeout, data, headers, auth, verify):
     )
 
     with open(file_path) as f:
-        return json.load(f)
+        return f.read()
 
 
 def mock_post_xml(url, timeout, data, headers, auth, verify):
@@ -97,43 +97,23 @@ class MockDevice(Device):
 
 
 class MockRPCClient(RPCClient):
-    def _send_request(self, commands, method="cli", timeout=30, post_args=False):
-        """
-        post_args is for testing only and will return the post arguments as a dictionary
-        instead of the normal response.
-        """
-        timeout = int(timeout)
+    def _send_request(self, commands, method="cli"):
         payload = self._build_payload(commands, method)
-
-        if post_args is True:
-            return {
-                "url": self.url,
-                "timeout": timeout,
-                "data": payload,
-                "headers": self.headers,
-                "auth": HTTPBasicAuth(self.username, self.password),
-                "verify": self.verify,
-            }
 
         mock_response = mock_post(
             self.url,
-            timeout=timeout,
+            timeout=self.timeout,
             data=payload,
             headers=self.headers,
             auth=HTTPBasicAuth(self.username, self.password),
             verify=self.verify,
         )
-        # Modified from actual behavior here to simplify the mocking
-        # response_list = json.loads(response.text)
-        response_list = mock_response
 
-        if isinstance(response_list, dict):
-            response_list = [response_list]
+        response_obj = FakeResponse()
+        response_obj.text = mock_response
+        response_obj.status_code = 200
 
-        # Add the 'command' that was executed to the response dictionary
-        for i, response_dict in enumerate(response_list):
-            response_dict["command"] = commands[i]
-        return response_list
+        return self._process_api_response(response_obj, commands)
 
 
 class MockXMLClient(XMLClient):
