@@ -45,6 +45,8 @@ def test_build_payload(mock_pynxos_device):
     assert payload_dict["method"] == "cli"
     assert payload_dict["params"]["cmd"] == "show hostname"
     assert payload_dict["params"]["version"] == 1.0
+
+    # Payload with list of commands
     payload = mock_device.api._build_payload(
         ["show hostname", "show version"], method="cli"
     )
@@ -62,15 +64,6 @@ def test_build_payload(mock_pynxos_device):
     assert payload_dict["method"] == "cli"
     assert payload_dict["params"]["cmd"] == "show version"
     assert payload_dict["params"]["version"] == 1.0
-    payload_dict = payload[1]
-
-
-def test_build_payload_xml(mock_pynxos_device_xml):
-
-    import pdb
-
-    pdb.set_trace()
-    print("zzzzzzz")
 
 
 def test_build_payload_xml(mock_pynxos_device_xml):
@@ -104,6 +97,23 @@ def test_build_payload_xml(mock_pynxos_device_xml):
     assert api_cmd.tag == "input"
     assert api_cmd.text == "show hostname"
     assert output_format.tag == "output_format"
+    assert output_format.text == "xml"
+
+    # Payload with list of commands
+    payload = mock_device.api._build_payload(
+        ["show hostname", "show version"], method="cli_show"
+    )
+    xml_root = etree.fromstring(payload)
+    assert xml_root.tag == "ins_api"
+    version = xml_root.find("./version")
+    api_method = xml_root.find("./type")
+    sid = xml_root.find("./sid")
+    api_cmd = xml_root.find("./input")
+    output_format = xml_root.find("./output_format")
+    assert api_cmd.text == "show hostname ;show version"
+    assert version.tag == "version"
+    assert version.text == "1.0"
+    assert api_method.text == "cli_show"
     assert output_format.text == "xml"
 
 
