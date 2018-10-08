@@ -14,7 +14,9 @@ class FakeResponse(object):
         self.text = ""
 
 
-def mock_post(url, timeout, data, headers, auth, verify, api_type="jsonrpc"):
+def mock_post(
+    url, timeout, data, headers, auth, verify, api_type="jsonrpc", raw_text=False
+):
     """Look up the response based on the URL and payload."""
 
     # Construct the path to search for the mocked data
@@ -22,7 +24,13 @@ def mock_post(url, timeout, data, headers, auth, verify, api_type="jsonrpc"):
     base_dir = "test/mocked_data"
     if api_type == "jsonrpc":
         data = json.loads(data)
-        api_cmd = data[0]["params"]["cmd"]
+        if len(data) == 1:
+            api_cmd = data[0]["params"]["cmd"]
+            if isinstance(api_cmd, list):
+                api_cmd = "__".join(api_cmd)
+        else:
+            cmd_list = [cmd_dict["params"]["cmd"] for cmd_dict in data]
+            api_cmd = "__".join(cmd_list)
         file_ext = "json"
     elif api_type == "xml":
         xml_root = etree.fromstring(data)
@@ -30,9 +38,16 @@ def mock_post(url, timeout, data, headers, auth, verify, api_type="jsonrpc"):
         api_cmd = input_obj.text
         file_ext = "xml"
     api_cmd = api_cmd.replace(" ", "_")
-    file_path = "{base_dir}/{api_type}_{api_cmd}/response.{file_ext}".format(
-        base_dir=base_dir, api_type=api_type, api_cmd=api_cmd, file_ext=file_ext
-    )
+    api_cmd = api_cmd.replace(";", "_")
+
+    if raw_text:
+        file_path = "{base_dir}/{api_type}_{api_cmd}_raw/response.{file_ext}".format(
+            base_dir=base_dir, api_type=api_type, api_cmd=api_cmd, file_ext=file_ext
+        )
+    else:
+        file_path = "{base_dir}/{api_type}_{api_cmd}/response.{file_ext}".format(
+            base_dir=base_dir, api_type=api_type, api_cmd=api_cmd, file_ext=file_ext
+        )
 
     with open(file_path) as f:
         return f.read()
@@ -86,6 +101,7 @@ class MockRPCClient(RPCClient):
     def _send_request(self, commands, method="cli"):
         payload = self._build_payload(commands, method)
 
+        raw_text = True if method in ["cli_ascii", "cli_show_ascii"] else False
         mock_response = mock_post(
             self.url,
             timeout=self.timeout,
@@ -94,6 +110,7 @@ class MockRPCClient(RPCClient):
             auth=HTTPBasicAuth(self.username, self.password),
             verify=self.verify,
             api_type="jsonrpc",
+            raw_text=raw_text,
         )
 
         response_obj = FakeResponse()
@@ -107,6 +124,7 @@ class MockXMLClient(XMLClient):
     def _send_request(self, commands, method="cli_show"):
         payload = self._build_payload(commands, method)
 
+        raw_text = True if method in ["cli_ascii", "cli_show_ascii"] else False
         mock_response = mock_post(
             self.url,
             timeout=self.timeout,
@@ -115,6 +133,7 @@ class MockXMLClient(XMLClient):
             auth=HTTPBasicAuth(self.username, self.password),
             verify=self.verify,
             api_type="xml",
+            raw_text=raw_text,
         )
 
         response_obj = FakeResponse()

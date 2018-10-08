@@ -86,9 +86,7 @@ class Device(object):
                 if response and not raw_text:
                     return_list.append(response["body"])
         elif self.api_format == "xml":
-            for response in response_list:
-                if response:
-                    return_list.append(response)
+            return_list = response_list
 
         return return_list
 
@@ -114,7 +112,7 @@ class Device(object):
         Raises:
             NXAPICommandError: If there is a problem with one of the commands in the list.
         """
-        return self.api._nxapi_command(commands)
+        return self.api._nxapi_command_conf(commands)
 
     def save(self, filename="startup-config"):
         """Save a device's running configuration.
