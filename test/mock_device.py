@@ -3,9 +3,15 @@ from builtins import super
 
 from requests.auth import HTTPBasicAuth
 import json
+from lxml import etree
 
 from pynxos import Device
 from pynxos import RPCClient, XMLClient
+
+
+class FakeResponse(object):
+    def __init__(self):
+        self.text = ""
 
 
 def mock_post(url, timeout, data, headers, auth, verify):
@@ -29,7 +35,21 @@ def mock_post(url, timeout, data, headers, auth, verify):
 
 def mock_post_xml(url, timeout, data, headers, auth, verify):
     """Look up the response based on the URL and payload."""
-    pass
+
+    # Construct the path to search for the mocked data
+    # e.g. ./mocked_data/jsonrpc_show_hostname/response.json
+    base_dir = "test/mocked_data"
+    xml_root = etree.fromstring(data)
+    input_obj = xml_root.find("./input")
+    api_type = "xml"
+    api_cmd = input_obj.text
+    api_cmd = api_cmd.replace(" ", "_")
+    file_path = "{base_dir}/{api_type}_{api_cmd}/response.xml".format(
+        base_dir=base_dir, api_type=api_type, api_cmd=api_cmd
+    )
+
+    with open(file_path) as f:
+        return f.read()
 
 
 class MockDevice(Device):
@@ -129,4 +149,8 @@ class MockXMLClient(XMLClient):
             verify=self.verify,
         )
 
-        return self._process_api_response(response, commands)
+        response_obj = FakeResponse()
+        response_obj.text = mock_response
+        response_obj.status_code = 200
+
+        return self._process_api_response(response_obj, commands)

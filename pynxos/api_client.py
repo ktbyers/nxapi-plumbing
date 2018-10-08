@@ -5,10 +5,11 @@ import requests
 from requests.auth import HTTPBasicAuth
 import json
 
-from xml.dom import minidom
+from lxml import etree
+
 from six import string_types
 
-from pynxos.errors import NXAPIError, NXAPIPostError, NXAPICommandError
+from pynxos.errors import NXAPIError, NXAPIPostError, NXAPICommandError, NXAPIXMLError
 
 
 class RPCBase(object):
@@ -143,7 +144,7 @@ class XMLClient(RPCBase):
 
         text_response_list = []
         for command_response in api_response:
-            self._error_check_xml(command_response)
+            self._error_check(command_response)
             text_response_list.append(api_response)
         return text_response_list
 
@@ -174,25 +175,19 @@ class XMLClient(RPCBase):
         return payload
 
     def _process_api_response(self, response, commands):
-        response_list = [{"response": response.text}]
+        xml_root = etree.fromstring(response.text)
+        response_list = xml_root.xpath("outputs/output")
+        if len(commands) != len(response_list):
+            raise NXAPIXMLError(
+                "XML response doesn't match expected number of commands."
+            )
 
-        # Add the 'command' that was executed to the response dictionary
-        for i, response_dict in enumerate(response_list):
-            response_dict["command"] = commands[i]
         return response_list
 
     def _error_check(self, command_response):
-        def NodeAsText(node):
-            # convert a XML element to a string
-            try:
-                nodetext = node[0].firstChild.data.strip()
-                return nodetext
-            except IndexError:
-                return "__na__"
-
-        # creates an xml object and identifies the clierror element
-        dom = minidom.parseString(command_response["response"])
-        node = dom.getElementsByTagName("clierror")
-
-        if "__na__" != NodeAsText(node):
-            raise NXAPICommandError(command_response["command"], NodeAsText(node))
+        """commmand_response will be an XML Etree object."""
+        error_list = command_response.xpath("//clierror")
+        if error_list:
+            raise NXAPICommandError(
+                "Error detected in XML output: {}".format(error_list[0].tostring())
+            )

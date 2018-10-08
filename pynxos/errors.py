@@ -28,3 +28,9 @@ class NXAPIPostError(NXAPIError):
     """Status code returned by NXAPI indicates an error occurred."""
 
     pass
+
+
+class NXAPIXMLError(NXAPIError):
+    """Status code returned by NXAPI indicates an error occurred."""
+
+    pass

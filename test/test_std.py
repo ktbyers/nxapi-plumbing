@@ -81,9 +81,22 @@ def test_build_payload_xml(mock_pynxos_device_xml):
     assert output_format.text == "xml"
 
 
-def test_show_hostname(mock_pynxos_device):
+def test_show_hostname_jsonrpc(mock_pynxos_device):
     result = mock_pynxos_device.show("show hostname")
     assert result["hostname"] == "nxos.domain.com"
+
+
+def test_show_hostname_xml(mock_pynxos_device_xml):
+    result = mock_pynxos_device_xml.show("show hostname")
+    xml_obj = result[0]
+    response = xml_obj.find("./body/hostname")
+    input_obj = xml_obj.find("./input")
+    msg_obj = xml_obj.find("./msg")
+    code_obj = xml_obj.find("./code")
+    assert input_obj.text == "show hostname"
+    assert msg_obj.text == "Success"
+    assert code_obj.text == "200"
+    assert response.text == "nxos.domain.com"
 
 
 def test_show_version(mock_pynxos_device):
