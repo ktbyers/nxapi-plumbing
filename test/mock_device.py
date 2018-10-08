@@ -24,6 +24,8 @@ def mock_post(url, timeout, data, headers, auth, verify, api_type="jsonrpc"):
         data = json.loads(data)
         if len(data) == 1:
             api_cmd = data[0]["params"]["cmd"]
+            if isinstance(api_cmd, list):
+                api_cmd = "__".join(api_cmd)
         else:
             cmd_list = [cmd_dict["params"]["cmd"] for cmd_dict in data]
             api_cmd = "__".join(cmd_list)

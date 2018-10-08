@@ -112,7 +112,7 @@ class Device(object):
         Raises:
             NXAPICommandError: If there is a problem with one of the commands in the list.
         """
-        return self.api._nxapi_command(commands)
+        return self.api._nxapi_command_conf(commands)
 
     def save(self, filename="startup-config"):
         """Save a device's running configuration.

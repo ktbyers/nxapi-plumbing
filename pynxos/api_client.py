@@ -81,6 +81,7 @@ class RPCClient(RPCBase):
         self.headers = {"content-type": "application/json-rpc"}
         self.api = "jsonrpc"
         self.cmd_method = "cli"
+        self.cmd_method_conf = "cli"
         self.cmd_method_raw = "cli_ascii"
 
     def _nxapi_command(self, commands, method=None):
@@ -97,6 +98,11 @@ class RPCClient(RPCBase):
             self._error_check(command_response)
             text_response_list.append(command_response["result"])
         return text_response_list
+
+    def _nxapi_command_conf(self, commands, method=None):
+        if method is None:
+            method = self.cmd_method_conf
+        return self._nxapi_command(commands=commands, method=method)
 
     def _build_payload(self, commands, method, rpc_version="2.0", api_version=1.0):
         """Construct the JSON-RPC payload for NX-API."""
@@ -131,6 +137,7 @@ class XMLClient(RPCBase):
         self.headers = {"content-type": "application/xml"}
         self.api = "xml"
         self.cmd_method = "cli_show"
+        self.cmd_method_conf = "cli_conf"
         self.cmd_method_raw = "cli_show_ascii"
 
     def _nxapi_command(self, commands, method=None):
@@ -144,6 +151,11 @@ class XMLClient(RPCBase):
         for command_response in api_response:
             self._error_check(command_response)
         return api_response
+
+    def _nxapi_command_conf(self, commands, method=None):
+        if method is None:
+            method = self.cmd_method_conf
+        return self._nxapi_command(commands=commands, method=method)
 
     def _build_payload(self, commands, method, xml_version="1.0", version="1.0"):
         xml_commands = ""
