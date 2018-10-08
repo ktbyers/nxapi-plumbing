@@ -28,6 +28,11 @@ def test_show_hostname_jsonrpc(mock_pynxos_device):
     assert result["hostname"] == "nxos.domain.com"
 
 
+def test_show_hostname_raw_jsonrpc(mock_pynxos_device):
+    result = mock_pynxos_device.show("show hostname", raw_text=True)
+    assert result.strip() == "nxos.domain.com"
+
+
 def test_show_hostname_xml(mock_pynxos_device_xml):
     result = mock_pynxos_device_xml.show("show hostname")
     xml_obj = result
