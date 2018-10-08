@@ -32,7 +32,7 @@ def find_version(*file_paths):
 setup(
     name="nxapi_plumbing",
     version=find_version("nxapi_plumbing", "__init__.py"),
-    description="A low-level library for managing Cisco devices through NX-API using XML or jsonrpc.",
+    description="A library for managing Cisco devices through NX-API using XML or jsonrpc.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/ktbyers/nxapi_plumbing",
