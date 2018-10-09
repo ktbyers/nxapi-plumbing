@@ -70,15 +70,6 @@ status_code: {}""".format(
 
         return self._process_api_response(response, commands)
 
-    def _error_check(self, command_response):
-        error = command_response.get("error")
-        if error:
-            command = command_response.get("command")
-            if "data" in error:
-                raise NXAPICommandError(command, error["data"]["msg"])
-            else:
-                raise NXAPICommandError(command, "Invalid command.")
-
 
 class RPCClient(RPCBase):
     def __init__(self, *args, **kwargs):
@@ -134,6 +125,15 @@ class RPCClient(RPCBase):
         for i, response_dict in enumerate(response_list):
             response_dict["command"] = commands[i]
         return response_list
+
+    def _error_check(self, command_response):
+        error = command_response.get("error")
+        if error:
+            command = command_response.get("command")
+            if "data" in error:
+                raise NXAPICommandError(command, error["data"]["msg"])
+            else:
+                raise NXAPICommandError(command, "Invalid command.")
 
 
 class XMLClient(RPCBase):

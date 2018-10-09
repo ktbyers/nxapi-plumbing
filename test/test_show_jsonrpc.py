@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 import time
 import json
 from lxml import etree
+import pytest
+from nxapi_plumbing import NXAPICommandError
 
 
 # def test_real_device(pynxos_device):
@@ -51,3 +53,10 @@ def test_show_list_jsonrpc(mock_pynxos_device):
     assert result_version["memory"] == 4002196
     assert result_version["proc_board_id"] == "TM6012EC74B"
     assert result_version["sys_ver_str"] == "7.3(1)D1(1) [build 7.3(1)D1(0.10)]"
+
+
+def test_show_invalid_jsonrpc(mock_pynxos_device):
+    """Execute an invalid command."""
+    with pytest.raises(NXAPICommandError) as e:
+        result = mock_pynxos_device.show("bogus command")
+    assert 'The command "bogus command" gave the error "% Invalid command' in str(e)
