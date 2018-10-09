@@ -44,7 +44,7 @@ pprint(output)
 
 #### Output would be a list of responses (list of dictionaries)
 
-```py
+```json
 [
     {
         "command": "show hostname",
