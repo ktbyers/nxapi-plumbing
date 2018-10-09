@@ -200,8 +200,9 @@ class XMLClient(RPCBase):
 
     def _error_check(self, command_response):
         """commmand_response will be an XML Etree object."""
-        error_list = command_response.xpath("//clierror")
-        if error_list:
-            raise NXAPICommandError(
-                "Error detected in XML output: {}".format(error_list[0].tostring())
-            )
+        error_list = command_response.find("./clierror")
+        command_obj = command_response.find("./input")
+        if error_list is not None:
+            command = command_obj.text if command_obj is not None else "Unknown command"
+            msg = etree.tostring(error_list).decode()
+            raise NXAPICommandError(command, msg)
