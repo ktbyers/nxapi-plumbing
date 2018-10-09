@@ -2,13 +2,9 @@ from __future__ import unicode_literals
 
 
 class NXAPIError(Exception):
-    def __init__(self, message):
-        self.message = message
+    """Generic NXAPI exception."""
 
-    def __repr__(self):
-        return "{}: {}".format(self.__class__.__name__, self.message)
-
-    __str__ = __repr__
+    pass
 
 
 class NXAPICommandError(NXAPIError):
@@ -25,12 +21,12 @@ class NXAPICommandError(NXAPIError):
 
 
 class NXAPIPostError(NXAPIError):
-    """Status code returned by NXAPI indicates an error occurred."""
+    """Exception occurred during HTTP POST to NX-API."""
 
     pass
 
 
 class NXAPIXMLError(NXAPIError):
-    """Status code returned by NXAPI indicates an error occurred."""
+    """Exception occurred processing XML response from NX-API."""
 
     pass

@@ -1,6 +1,6 @@
 from __future__ import print_function, unicode_literals
 
-from nxapi_plumbing.errors import NXAPICommandError
+from nxapi_plumbing.errors import NXAPIError, NXAPICommandError
 from nxapi_plumbing.api_client import RPCClient, XMLClient
 
 
@@ -58,10 +58,17 @@ class Device(object):
             The output of the show command, which could be raw text or structured data.
         """
         commands = [command]
-        list_result = self.show_list(commands, raw_text)
-        if list_result:
-            return list_result[0]
-        return {}
+        result = self.show_list(commands, raw_text)
+        if len(result) > 1:
+            raise NXAPIError(
+                "Length of response inconsistent with number of commands executed."
+            )
+
+        # Return the only entry or the empty response
+        if result:
+            return result[0]["result"]
+        else:
+            return result
 
     def show_list(self, commands, raw_text=False):
         """Send a list of non-configuration commands.
@@ -75,20 +82,8 @@ class Device(object):
         Returns:
             A list of outputs for each show command
         """
-        return_list = []
         cmd_method = self.api.cmd_method_raw if raw_text else self.api.cmd_method
-        response_list = self.api._nxapi_command(commands, method=cmd_method)
-
-        if self.api_format == "jsonrpc":
-            for response in response_list:
-                if response and raw_text:
-                    return_list.append(response["msg"])
-                if response and not raw_text:
-                    return_list.append(response["body"])
-        elif self.api_format == "xml":
-            return_list = response_list
-
-        return return_list
+        return self.api._nxapi_command(commands, method=cmd_method)
 
     def config(self, command):
         """Send a configuration command.
