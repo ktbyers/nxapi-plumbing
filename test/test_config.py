@@ -17,7 +17,9 @@ def test_config_list_jsonrpc(mock_pynxos_device):
         "logging history size 400",
     ]
     result = mock_pynxos_device.config_list(cfg_cmds)
-    assert result == [None, None, None]
+    for i, response_dict in enumerate(result):
+        assert cfg_cmds[i] == response_dict["command"]
+        assert response_dict["result"] is None
 
 
 def test_config_xml(mock_pynxos_device_xml):

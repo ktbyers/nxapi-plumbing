@@ -45,7 +45,7 @@ class RPCBase(object):
         self.timeout = timeout
         self.verify = verify
 
-    def _process_api_response(self, response, commands):
+    def _process_api_response(self, response, commands, raw_text=False):
         raise NotImplementedError("Method must be implemented in child class")
 
     def _send_request(self, commands, method):
@@ -68,16 +68,7 @@ status_code: {}""".format(
             )
             raise NXAPIPostError(msg)
 
-        return self._process_api_response(response, commands)
-
-    def _error_check(self, command_response):
-        error = command_response.get("error")
-        if error:
-            command = command_response.get("command")
-            if "data" in error:
-                raise NXAPICommandError(command, error["data"]["msg"])
-            else:
-                raise NXAPICommandError(command, "Invalid command.")
+        return response.text
 
 
 class RPCClient(RPCBase):
@@ -96,13 +87,11 @@ class RPCClient(RPCBase):
         if isinstance(commands, string_types):
             commands = [commands]
 
-        api_response = self._send_request(commands, method=method)
+        raw_text = True if method == "cli_ascii" else False
 
-        text_response_list = []
-        for command_response in api_response:
-            self._error_check(command_response)
-            text_response_list.append(command_response["result"])
-        return text_response_list
+        response = self._send_request(commands, method=method)
+        api_response = self._process_api_response(response, commands, raw_text=raw_text)
+        return api_response
 
     def _nxapi_command_conf(self, commands, method=None):
         if method is None:
@@ -125,15 +114,52 @@ class RPCClient(RPCBase):
 
         return json.dumps(payload_list)
 
-    def _process_api_response(self, response, commands):
-        response_list = json.loads(response.text)
+    def _process_api_response(self, response, commands, raw_text=False):
+        """
+        Normalize the API response including handling errors; adding the sent command into
+        the returned data strucutre; make response structure consistent for raw_text and
+        structured data.
+        """
+
+        response_list = json.loads(response)
         if isinstance(response_list, dict):
             response_list = [response_list]
 
         # Add the 'command' that was executed to the response dictionary
         for i, response_dict in enumerate(response_list):
             response_dict["command"] = commands[i]
-        return response_list
+
+        new_response = []
+        for response in response_list:
+
+            # Dectect errors
+            self._error_check(response)
+
+            # Some commands like "show run" can have a None result
+            cmd_response = response.get("result")
+            if cmd_response is None:
+                cmd_response = {}
+
+            # Normalize the response data structure
+            response_dict = {"command": response["command"]}
+            if response and raw_text:
+                response_dict["result"] = cmd_response.get("msg")
+            elif response and not raw_text:
+                response_dict["result"] = cmd_response.get("body")
+            else:
+                raise NXAPIError("Unexpected value encountered processing response.")
+            new_response.append(response_dict)
+
+        return new_response
+
+    def _error_check(self, command_response):
+        error = command_response.get("error")
+        if error:
+            command = command_response.get("command")
+            if "data" in error:
+                raise NXAPICommandError(command, error["data"]["msg"])
+            else:
+                raise NXAPICommandError(command, "Invalid command.")
 
 
 class XMLClient(RPCBase):
@@ -152,7 +178,9 @@ class XMLClient(RPCBase):
         if isinstance(commands, string_types):
             commands = [commands]
 
-        api_response = self._send_request(commands, method=method)
+        response = self._send_request(commands, method=method)
+        api_response = self._process_api_response(response, commands)
+
         for command_response in api_response:
             self._error_check(command_response)
         return api_response
@@ -188,8 +216,8 @@ class XMLClient(RPCBase):
         )
         return payload
 
-    def _process_api_response(self, response, commands):
-        xml_root = etree.fromstring(response.text)
+    def _process_api_response(self, response, commands, raw_text=False):
+        xml_root = etree.fromstring(response)
         response_list = xml_root.xpath("outputs/output")
         if len(commands) != len(response_list):
             raise NXAPIXMLError(
@@ -200,8 +228,9 @@ class XMLClient(RPCBase):
 
     def _error_check(self, command_response):
         """commmand_response will be an XML Etree object."""
-        error_list = command_response.xpath("//clierror")
-        if error_list:
-            raise NXAPICommandError(
-                "Error detected in XML output: {}".format(error_list[0].tostring())
-            )
+        error_list = command_response.find("./clierror")
+        command_obj = command_response.find("./input")
+        if error_list is not None:
+            command = command_obj.text if command_obj is not None else "Unknown command"
+            msg = etree.tostring(error_list).decode()
+            raise NXAPICommandError(command, msg)
