@@ -48,6 +48,12 @@ def test_show_list_jsonrpc(mock_pynxos_device):
     result = mock_pynxos_device.show_list(cmds)
     result_hostname = result[0]
     result_version = result[1]
+    result_hostname["command"] == "show hostname"
+    result_version["command"] == "show version"
+
+    # Get the inner result response
+    result_hostname = result[0]["result"]
+    result_version = result[1]["result"]
     assert result_hostname["hostname"] == "nxos.domain.com"
     assert result_version["chassis_id"] == "NX-OSv Chassis"
     assert result_version["memory"] == 4002196

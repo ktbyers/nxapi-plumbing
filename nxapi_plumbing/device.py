@@ -66,9 +66,12 @@ class Device(object):
 
         # Return the only entry or the empty response
         if result:
-            return result[0]["result"]
-        else:
-            return result
+            if self.api_format == "jsonrpc":
+                return result[0]["result"]
+            elif self.api_format == "xml":
+                return result[0]
+
+        return result
 
     def show_list(self, commands, raw_text=False):
         """Send a list of non-configuration commands.
@@ -95,8 +98,21 @@ class Device(object):
             NXAPICommandError: If there is a problem with the supplied command.
         """
         commands = [command]
-        list_result = self.config_list(commands)
-        return list_result[0]
+        result = self.config_list(commands)
+
+        if len(result) > 1:
+            raise NXAPIError(
+                "Length of response inconsistent with number of commands executed."
+            )
+
+        # Return the only entry or the empty response
+        if result:
+            if self.api_format == "jsonrpc":
+                return result[0]["result"]
+            elif self.api_format == "xml":
+                return result[0]
+
+        return result
 
     def config_list(self, commands):
         """Send a list of configuration commands.

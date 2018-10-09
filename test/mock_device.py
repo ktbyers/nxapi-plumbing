@@ -117,7 +117,7 @@ class MockRPCClient(RPCClient):
         response_obj.text = mock_response
         response_obj.status_code = 200
 
-        return self._process_api_response(response_obj, commands)
+        return response_obj.text
 
 
 class MockXMLClient(XMLClient):
@@ -140,4 +140,4 @@ class MockXMLClient(XMLClient):
         response_obj.text = mock_response
         response_obj.status_code = 200
 
-        return self._process_api_response(response_obj, commands)
+        return response_obj.text
