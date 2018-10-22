@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 import time
 import json
 from lxml import etree
+import pytest
+from nxapi_plumbing import NXAPICommandError
 
 
 def test_pynxos_attributes_xml(mock_pynxos_device_xml):
@@ -58,3 +60,11 @@ def test_show_list_xml(mock_pynxos_device_xml):
     assert msg_obj.text == "Success"
     assert code_obj.text == "200"
     assert response.text == "nxos.domain.com"
+
+
+def test_show_invalid_xml(mock_pynxos_device_xml):
+    """Execute an invalid command."""
+    with pytest.raises(NXAPICommandError) as e:
+        result = mock_pynxos_device_xml.show("bogus command")
+    assert 'The command "bogus command" gave the error' in str(e)
+    assert "Syntax error while parsing" in str(e)
