@@ -20,6 +20,18 @@ class NXAPICommandError(NXAPIError):
     __str__ = __repr__
 
 
+class NXAPIConnectionError(NXAPIError):
+    """HTTP Post Connection Error."""
+
+    pass
+
+
+class NXAPIAuthError(NXAPIError):
+    """HTTP Post Authentication Error."""
+
+    pass
+
+
 class NXAPIPostError(NXAPIError):
     """Exception occurred during HTTP POST to NX-API."""
 
