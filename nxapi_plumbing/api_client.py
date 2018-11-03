@@ -3,6 +3,7 @@ from __future__ import print_function, unicode_literals
 from builtins import super
 import requests
 from requests.auth import HTTPBasicAuth
+from requests.exceptions import ConnectionError
 import json
 
 from lxml import etree
@@ -14,6 +15,8 @@ from nxapi_plumbing.errors import (
     NXAPIPostError,
     NXAPICommandError,
     NXAPIXMLError,
+    NXAPIAuthError,
+    NXAPIConnectionError,
 )
 
 
@@ -51,14 +54,24 @@ class RPCBase(object):
     def _send_request(self, commands, method):
         payload = self._build_payload(commands, method)
 
-        response = requests.post(
-            self.url,
-            timeout=self.timeout,
-            data=payload,
-            headers=self.headers,
-            auth=HTTPBasicAuth(self.username, self.password),
-            verify=self.verify,
-        )
+        try:
+            response = requests.post(
+                self.url,
+                timeout=self.timeout,
+                data=payload,
+                headers=self.headers,
+                auth=HTTPBasicAuth(self.username, self.password),
+                verify=self.verify,
+            )
+        except ConnectionError as e:
+            raise NXAPIConnectionError(str(e))
+
+        if response.status_code == 401:
+            msg = (
+                "Authentication to NX-API failed please verify your username, password, "
+                "and hostname."
+            )
+            raise NXAPIAuthError(msg)
 
         if response.status_code not in [200]:
             msg = """Invalid status code returned on NX-API POST
