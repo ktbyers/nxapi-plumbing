@@ -35,7 +35,7 @@ setup(
     description="A library for managing Cisco devices through NX-API using XML or jsonrpc.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/ktbyers/nxapi_plumbing",
+    url="https://github.com/ktbyers/nxapi-plumbing",
     author="Kirk Byers",
     author_email="ktbyers@twb-tech.com",
     license="Apache2",
